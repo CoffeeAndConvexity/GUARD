@@ -4,9 +4,9 @@
 
 ## Description
 
-Security games are a framework in algorithmic game theory that model scenarios involving strategic interactions between adversarial agents. In these games, defenders aim to protect valuable resources from potential attacks by adversaries. The paper [A Survey of Security Games](https://www.ijcai.org/proceedings/2018/0775.pdf) provides a comprehensive overview of the field, highlighting various models and strategies employed in security games. 
+Security games are a framework in algorithmic game theory that model scenarios involving strategic interactions between adversarial agents. In these games, defender(s) aim to protect valuable targets from attacking player(s). The paper [Stackelberg Security Games: Looking Beyond a Decade of Success](https://www.ijcai.org/proceedings/2018/0775.pdf) provides a comprehensive overview of security games in the field, highlighting various models and strategies employed by researchers to model and test different game constructions. 
 
-This library implements a flexible and customizable environment for generating security games, allowing users to define a wide range of parameters and scenarios. By leveraging real-world graphs generated through OSMnx, this library offers a realistic simulation of security scenarios, making it a valuable tool for researchers and practitioners in the field.
+This library implements a flexible and customizable environment for generating security games, allowing users to define a wide range of parameters and scenarios. By leveraging real-world graphs generated through OSMnx, this library offers a realistic simulation of security scenarios, making it a valuable tool for our research group to standardize the creation of our games.
 
 ## Importance of the Library
 
