@@ -1,3 +1,5 @@
+import networkx as nx
+
 class InterdictionProtocol:
     def __init__(self, graph, defense_time_threshold):
         """
