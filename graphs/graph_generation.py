@@ -65,11 +65,35 @@ class GraphGenerator:
         
         return G
 
+    def generate_simplified_graph(self, place_name, network_type='drive', show=True):
+        """
+        Generate a simplified graph from a place, extract its largest strongly connected component,
+        scale the node coordinates, and plot the graph.
+        
+        Parameters:
+        - place_name: Name of the place (e.g., "Hudson Yards, New York, USA").
+        - network_type: Type of network to create (e.g., 'drive', 'walk', 'bike').
+        
+        Returns:
+        - G_s: The simplified and scaled graph.
+        """
+        # Step 1: Create the graph from the place
+        G = self.create_graph(place_name, network_type)
+        
+        # Step 2: Get the largest strongly connected component
+        G_s = self.get_strongly_connected_component(G)
+        
+        # Step 3: Scale the node coordinates
+        G_s = self.scale_node_coordinates(G_s)
+        
+        # Step 4: Plot the graph if show == True
+        if show:
+            self.plot_graph(G_s)
+        
+        return G_s
+
 # Example usage
 if __name__ == "__main__":
     graph_gen = GraphGenerator()
-    G_hy = graph_gen.create_graph("Hudson Yards, New York, USA")
-    G_hy_s = graph_gen.get_strongly_connected_component(G_hy)
-    graph_gen.plot_graph(G_hy_s)
-    G_hy_s = graph_gen.scale_node_coordinates(G_hy_s)
-    print(G_hy_s.nodes(data=True))
+    G_hy_simplified = graph_gen.generate_simplified_graph("Hudson Yards, New York, USA")
+    print(G_hy_simplified.nodes(data=True))

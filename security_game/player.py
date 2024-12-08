@@ -25,7 +25,7 @@ class Defender(Player):
         super().__init__(name, start_node)
         self.capture_radius = capture_radius
      
-    def is_attacker_caught(self, attacker):
+    def is_attacker_caught(self, attacker, game):
         # Check if attacker is within capture radius
         path_length = nx.shortest_path_length(game.graph, source=self.current_node, target=attacker.current_node)
         return path_length <= self.capture_radius
