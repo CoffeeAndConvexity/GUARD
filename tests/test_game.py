@@ -19,6 +19,8 @@ def test_game_initialization():
                     num_stationary_attackers=1,
                     num_moving_defenders=1, 
                     num_stationary_defenders=0,
+                    moving_defender_capture_radius=1,
+                    stationary_defender_capture_radius=1,
                     allow_wait=True,
                     targets = targets
                     )
@@ -44,6 +46,8 @@ def test_attacker_behavior():
                     num_stationary_attackers=1,
                     num_moving_defenders=1, 
                     num_stationary_defenders=0,
+                    moving_defender_capture_radius=1,
+                    stationary_defender_capture_radius=1,
                     allow_wait=True,
                     targets = targets
                     )
@@ -85,6 +89,8 @@ def test_defender_behavior():
                     num_stationary_attackers=1,
                     num_moving_defenders=1, 
                     num_stationary_defenders=0,
+                    moving_defender_capture_radius=1,
+                    stationary_defender_capture_radius=1,
                     allow_wait=True,
                     targets = targets
                     )
@@ -124,6 +130,8 @@ def test_security_game_output():
                     num_stationary_attackers=1,
                     num_moving_defenders=1, 
                     num_stationary_defenders=1,
+                    moving_defender_capture_radius=1,
+                    stationary_defender_capture_radius=1,
                     allow_wait=True,
                     targets = targets
                     )

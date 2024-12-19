@@ -5,27 +5,31 @@ from .player import Attacker, Defender
 from .target import Target
 
 class Game:
-    def __init__(self, graph, num_timesteps,moving_attacker_start_nodes, moving_defender_start_nodes, stationary_defender_start_nodes, targets, interdiction_protocol, num_moving_attackers=1, num_stationary_attackers=0, num_moving_defenders=1, num_stationary_defenders=0, allow_wait=True):
+    def __init__(self, graph, num_timesteps,moving_attacker_start_nodes, moving_defender_start_nodes, stationary_defender_start_nodes, targets, interdiction_protocol, num_moving_attackers=1, num_stationary_attackers=0, num_moving_defenders=1, num_stationary_defenders=0, moving_defender_capture_radius=1, stationary_defender_capture_radius=1, moving_attacker_end_nodes=[], moving_defender_end_nodes=[], allow_wait=True):
         self.graph = graph
         self.interdiction_protocol = interdiction_protocol
         self.num_timesteps = num_timesteps
         self.moving_attacker_start_nodes = moving_attacker_start_nodes
         self.moving_defender_start_nodes = moving_defender_start_nodes
+        self.moving_attacker_end_nodes = moving_attacker_end_nodes
+        self.moving_defender_end_nodes = moving_defender_end_nodes
         self.stationary_defender_start_nodes = stationary_defender_start_nodes
         self.num_moving_attackers = num_moving_attackers
         self.num_stationary_attackers = num_stationary_attackers
         self.num_moving_defenders = num_moving_defenders
         self.num_stationary_defenders = num_stationary_defenders
+        self.moving_defender_capture_radius = moving_defender_capture_radius
+        self.stationary_defender_capture_radius = stationary_defender_capture_radius
         self.allow_wait = allow_wait
         self.targets = targets
          
         # Initialize attacker and defender units
         self.moving_attacker_units = [Attacker(f"Moving Attacker {i+1}", start_node) for i, start_node in enumerate(moving_attacker_start_nodes[:num_moving_attackers])]
         self.stationary_attacker_units = [Attacker(f"Stationary Attacker {i+1}", None) for i in range(num_stationary_attackers)]
-        self.moving_defender_units = [Defender(f"Moving Defender {i+1}", start_node, capture_radius=1) for i, start_node in enumerate(moving_defender_start_nodes[:num_moving_defenders])]
-        self.stationary_defender_units = [Defender(f"Stationary Defender {i+1}", start_node, capture_radius=1) for i, start_node in enumerate(stationary_defender_start_nodes[:num_stationary_defenders])]
+        self.moving_defender_units = [Defender(f"Moving Defender {i+1}", start_node, capture_radius=moving_defender_capture_radius) for i, start_node in enumerate(moving_defender_start_nodes[:num_moving_defenders])]
+        self.stationary_defender_units = [Defender(f"Stationary Defender {i+1}", start_node, capture_radius=stationary_defender_capture_radius) for i, start_node in enumerate(stationary_defender_start_nodes[:num_stationary_defenders])]
 
-    def generate_moving_player_strategies(self, graph, num_moving_units, start_nodes, num_timesteps, allow_wait):
+    def generate_moving_player_strategies(self, graph, num_moving_units, start_nodes, num_timesteps, allow_wait, end_nodes=[]):
         """
         Generates all possible movement strategies for moving players on the graph.
     
@@ -66,7 +70,9 @@ class Game:
         # Initialize DFS for all combinations of start nodes
         for start_node_combination in itertools.product(start_nodes, repeat=num_moving_units):
             dfs(start_node_combination, [start_node_combination])
-    
+
+        if end_nodes:
+            all_paths = [list(s) for s in set(tuple(i) for i in [p for p in all_paths if all(n in end_nodes for n in list(set(p[-1])))])]
         return all_paths
 
     def generate_strategy_matrix(self, player_type):
@@ -87,16 +93,18 @@ class Game:
             num_stationary_units = self.num_stationary_attackers
             num_moving_units = self.num_moving_attackers
             moving_start_nodes = self.moving_attacker_start_nodes
+            moving_end_nodes = self.moving_attacker_end_nodes
         elif player_type == "defender":
             num_stationary_units = self.num_stationary_defenders
             num_moving_units = self.num_moving_defenders
             moving_start_nodes = self.moving_defender_start_nodes
+            moving_end_nodes = self.moving_defender_end_nodes
         else:
             raise ValueError("Invalid player_type. Choose 'attacker' or 'defender'.")
     
         # Generate strategies for moving units
         moving_paths = self.generate_moving_player_strategies(
-            self.graph, num_moving_units, moving_start_nodes, num_timesteps, allow_wait
+            self.graph, num_moving_units, moving_start_nodes, num_timesteps, allow_wait, moving_end_nodes
         )
     
         # Generate strategies for stationary units
