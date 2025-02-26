@@ -82,3 +82,50 @@ def get_centroid_scores(df, coordinate_rectangle, num_columns, num_rows, num_clu
         centroid_scores[cell_key] = centroid_scores.get(cell_key, 0) + cluster_sizes[cluster_idx]
     
     return centroid_scores
+
+
+    def assign_population(power_df, block_gdf, mode="block", radius=None):
+        """
+        Assigns population to power features based on Census block data.
+
+        Parameters:
+        - power_df: DataFrame with columns ['id', 'x', 'y'] representing power feature locations.
+        - block_gdf: GeoDataFrame with block geometries and population data.
+        - mode: "block" assigns population of the block containing the feature; "radius" sums population of blocks within radius.
+        - radius: Radius in meters for "radius" mode (ignored for "block" mode).
+
+        Returns:
+        - A new DataFrame with an added 'population' column.
+        """
+
+        # Convert power features into a GeoDataFrame
+        power_gdf = gpd.GeoDataFrame(
+            power_df,
+            geometry=gpd.points_from_xy(power_df.x, power_df.y),
+            crs=block_gdf.crs  # Ensure matching coordinate reference system
+        )
+
+        if mode == "block":
+            # Spatial join to find the containing block
+            joined = gpd.sjoin(power_gdf, block_gdf[['POP20', 'geometry']], how="left", predicate="within")
+            power_df['population'] = joined['POP20']
+
+        elif mode == "radius":
+            if radius is None:
+                raise ValueError("Radius must be specified for 'radius' mode.")
+
+            # Convert meters to CRS units (assumes projected CRS, otherwise use geopy or pyproj for accurate conversion)
+            power_gdf = power_gdf.to_crs(epsg=3857)  # Convert to meters-based CRS
+            block_gdf = block_gdf.to_crs(epsg=3857)
+
+            # Create buffer zones and find intersecting blocks
+            power_gdf['buffer'] = power_gdf.geometry.buffer(radius)
+            power_df['population'] = power_gdf['buffer'].apply(
+                lambda buf: block_gdf[block_gdf.geometry.intersects(buf)]['POP20'].sum()
+                if not block_gdf[block_gdf.geometry.intersects(buf)].empty else float('nan')
+            )
+
+        else:
+            raise ValueError("Invalid mode. Choose 'block' or 'radius'.")
+
+        return power_df[['id', 'x', 'y', 'power', 'population']]
