@@ -1,6 +1,8 @@
-# Security Games: Example 1 - Green Security Game
+# Security Games
 
-## Introduction
+## Example 1 - Green Security Game
+
+### Introduction
 The Security Game framework provides a structured way to model adversarial interactions over a graph. The `SecurityGame` class serves as the parent for all security games, fixing certain constraints such as all attackers being stationary and defenders moving, a designated home base, and structured strategy generation. This example walks through a `GreenSecurityGame` implementation using real-world animal movement data to model patrol strategies for protecting wildlife.
 
 ---
