@@ -10,7 +10,7 @@ from matplotlib import pyplot as plt
 from security_game.security_game import SecurityGame
 from security_game.target import Target
 sys.path.append('..')
-from util.target_utils import get_density_scores, get_centroid_scores
+from utils.target_utils import get_density_scores, get_centroid_scores
 
 class GreenSecurityGame:
     def __init__(self, data, coordinate_rectangle, scoring_method, num_clusters=None, num_rows=5, num_columns=5):

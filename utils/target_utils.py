@@ -1,3 +1,5 @@
+from sklearn.cluster import KMeans
+
 def get_density_scores(df, coordinate_rectangle, num_columns, num_rows):
     """
     Assign scores to grid cells based on the direct animal location data.

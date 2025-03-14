@@ -142,6 +142,7 @@ class Game:
     
         # Convert to numpy array for consistency
         return np.array(combined_strategies)
+        
     
     def play_game_with_strategies(self, defender_strategy, attacker_strategy):
         """
