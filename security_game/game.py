@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 import networkx as nx
 import itertools
 from .player import Attacker, Defender
@@ -31,49 +32,74 @@ class Game:
 
     def generate_moving_player_strategies(self, graph, num_moving_units, start_nodes, num_timesteps, allow_wait, end_nodes=[]):
         """
-        Generates all possible movement strategies for moving players on the graph.
-    
+        Generates all possible movement strategies for moving players on the graph with specific start and end node constraints.
+
         Parameters:
         - graph: NetworkX graph representing the game environment.
-        - start_nodes: List of potential start nodes for the players.
+        - num_moving_units: Number of moving players.
+        - start_nodes: List of tuples where each element contains allowed start nodes for a unit.
         - num_timesteps: Number of timesteps in the game.
         - allow_wait: Whether waiting at a node is allowed.
-    
-        Returns:
-        - List of all possible paths (strategies) for the moving players.
-        """
-        if num_moving_units == 0:
-            # No moving units, return an empty list
-            return []
-    
-        all_paths = []
-    
-        # DFS logic to generate all possible strategies
-        def dfs(current_positions, path):
-            if len(path) == num_timesteps:
-                all_paths.append(path)
-                return
-    
-            for i, current_position in enumerate(current_positions):
-                neighbors = list(graph.neighbors(current_position))
-    
-                # Add waiting option if allowed or no neighbors
-                if allow_wait or not neighbors:
-                    dfs(tuple(current_positions), path + [tuple(current_positions)])
-    
-                # Move to neighboring nodes
-                for neighbor in neighbors:
-                    new_positions = list(current_positions)
-                    new_positions[i] = neighbor
-                    dfs(tuple(new_positions), path + [tuple(new_positions)])
-    
-        # Initialize DFS for all combinations of start nodes
-        for start_node_combination in itertools.product(start_nodes, repeat=num_moving_units):
-            dfs(start_node_combination, [start_node_combination])
+        - end_nodes: List of tuples where each element contains allowed end nodes for a unit.
 
-        if end_nodes:
-            all_paths = [list(s) for s in set(tuple(i) for i in [p for p in all_paths if all(n in end_nodes for n in list(set(p[-1])))])]
-        return all_paths
+        Returns:
+        - List of all valid movement strategies, formatted correctly.
+        """
+            
+        if num_moving_units == 0:
+            return []
+
+        # Validation check: Ensure start_nodes and end_nodes match num_moving_units or are empty
+        if (start_nodes and len(start_nodes) != num_moving_units) or (end_nodes and len(end_nodes) != num_moving_units):
+            raise ValueError(f"start_nodes and end_nodes must be either empty or have exactly {num_moving_units} elements.")
+        
+        # Default to all nodes if empty lists are passed
+        if not start_nodes:
+            start_nodes = [list(graph.nodes)] * num_moving_units  # Each unit can start at any node
+        if not end_nodes:
+            end_nodes = [list(graph.nodes)] * num_moving_units  # Each unit can end at any node
+
+        def generate_paths(valid_start_nodes, valid_end_nodes):
+            # print(valid_start_nodes)
+            """Generates all valid paths for a single unit respecting start and end constraints."""
+            all_paths = []
+            
+            def dfs(current_path):
+                if len(current_path) == num_timesteps:
+                    if not valid_end_nodes or current_path[-1] in valid_end_nodes:
+                        all_paths.append(list(current_path))
+                    return
+                
+                current_node = current_path[-1]
+                neighbors = list(graph.neighbors(current_node))
+                
+                if allow_wait or not neighbors:
+                    dfs(current_path + [current_node])
+                
+                for neighbor in neighbors:
+                    dfs(current_path + [neighbor])
+            
+            for start_node in valid_start_nodes:
+                dfs([start_node])
+            
+            return all_paths
+        
+        # Generate paths per unit based on their specific constraints
+        unit_paths = []
+        for i in range(num_moving_units):
+            # print(start_nodes,end_nodes)
+            unit_paths.append(generate_paths(start_nodes[i], end_nodes[i] if end_nodes else []))
+        
+        # Generate all valid assignments of paths to units
+        valid_combinations = list(itertools.product(*unit_paths))
+        
+        # Convert to correct format: timestep-major
+        formatted_paths = []
+        for path_tuple in valid_combinations:
+            timestep_paths = list(zip(*path_tuple))
+            formatted_paths.append(timestep_paths)
+        
+        return formatted_paths
 
     def generate_strategy_matrix(self, player_type):
         """
@@ -110,8 +136,7 @@ class Game:
         # Generate strategies for stationary units
         if player_type == "attacker":
             stationary_targets = [target.node for target in self.targets] + [None]
-            stationary_strategies = list(
-                itertools.product(stationary_targets, repeat=num_stationary_units)
+            stationary_strategies = list(itertools.combinations(stationary_targets, num_stationary_units)
             )
         else:
             stationary_strategies = list(
@@ -139,10 +164,8 @@ class Game:
                         for moving_positions in moving_path
                     ]
                     combined_strategies.append(combined_path)
-    
-        # Convert to numpy array for consistency
         return np.array(combined_strategies)
-        
+
     
     def play_game_with_strategies(self, defender_strategy, attacker_strategy):
         """
@@ -179,7 +202,7 @@ class Game:
                 # Check if the attacker reached an unreached target
                 for target in self.targets:
                     if position == target.node and target.node not in reached_targets:
-                        moving_attacker_score -= target.value
+                        moving_attacker_score -= target.attacker_value #whole game is from defender POV, subtract positive
                         reached_targets.add(target.node)
     
             # Exit early if all moving attackers are interdicted
@@ -205,28 +228,132 @@ class Game:
                 if not stationary_interdictions[idx] and position not in reached_targets:
                     for target in self.targets:
                         if position == target.node:
-                            stationary_attacker_score -= target.value
+                            stationary_attacker_score -= target.attacker_value
                             reached_targets.add(target.node)
     
         # Step 3: Return the total score
         return moving_attacker_score + stationary_attacker_score
 
-    def generate_utility_matrix(self):
+    def generate_utility_matrix(self, general_sum, defender_step_cost):
         """
         Generate the utility matrix by simulating all combinations of strategies
         for both attackers and defenders, accounting for stationary and moving units.
         """
-        # Generate strategies for defenders and attackers
-        defender_matrix = self.generate_strategy_matrix("defender")
-        attacker_matrix = self.generate_strategy_matrix("attacker")
-        
-        # Initialize the utility matrix
-        utility_matrix = np.zeros((len(defender_matrix), len(attacker_matrix)))
-        
-        # Loop through all combinations of strategies
-        for i, defender_strategy in enumerate(defender_matrix):
-            for j, attacker_strategy in enumerate(attacker_matrix):
-                # Simulate the game with the current strategies and store the outcome
-                utility_matrix[i, j] = self.play_game_with_strategies(defender_strategy, attacker_strategy)
-        
-        return utility_matrix
+        if not general_sum:
+            # Generate strategies for defenders and attackers
+            defender_matrix = self.generate_strategy_matrix("defender")
+            attacker_matrix = self.generate_strategy_matrix("attacker")
+
+            
+            # Initialize the utility matrix
+            utility_matrix = np.zeros((len(defender_matrix), len(attacker_matrix)))
+            
+            # Loop through all combinations of strategies
+            for i, defender_strategy in enumerate(defender_matrix):
+                for j, attacker_strategy in enumerate(attacker_matrix):
+                    # Simulate the game with the current strategies and store the outcome
+                    utility_matrix[i, j] = self.play_game_with_strategies(defender_strategy, attacker_strategy)
+            
+            return utility_matrix, None, None
+        else:
+            # Generate strategies for defenders and attackers
+            defender_matrix = self.generate_strategy_matrix("defender")
+            attacker_matrix = self.generate_strategy_matrix("attacker")
+
+            num_defender_strategies = len(defender_matrix)
+            num_attacker_strategies = len(attacker_matrix)
+
+            # Initialize the utility matrices
+            defender_utility_matrix = np.zeros((num_defender_strategies, num_attacker_strategies))
+            attacker_utility_matrix = np.zeros((num_defender_strategies, num_attacker_strategies))
+
+            # Loop through all combinations of strategies
+            for i, defender_strategy in enumerate(defender_matrix):
+                for j, attacker_strategy in enumerate(attacker_matrix):
+                    # Play the general-sum game with both strategies
+                    attacker_score, defender_score = self.play_game_with_strategies_general(defender_strategy, attacker_strategy, defender_step_cost)
+
+                    # Store the respective scores
+                    defender_utility_matrix[i, j] = defender_score
+                    attacker_utility_matrix[i, j] = attacker_score
+
+            return None, attacker_utility_matrix, defender_utility_matrix
+
+    def play_game_with_strategies_general(self, defender_strategy, attacker_strategy, defender_step_cost):
+        """
+        Simulate the game with given defender and attacker strategies, incorporating defender movement cost.
+
+        Parameters:
+            defender_strategy (list[tuple[int]]): Defender positions for each timestep.
+            attacker_strategy (list[tuple[int]]): Attacker positions for each timestep.
+            defender_step_cost (float): Cost incurred per movement step taken by any defender.
+
+        Returns:
+            (attacker_score, defender_score): Tuple of utility values for attacker and defender.
+        """
+        reached_targets = set()
+        defender_score = 0
+        moving_attacker_score = 0
+        stationary_attacker_score = 0
+
+        # Step 1: Handle moving attackers
+        interdicted = [False] * self.num_moving_attackers
+
+        for t in range(self.num_timesteps):
+            current_attacker_positions = attacker_strategy[t][:self.num_moving_attackers]
+            current_defender_positions = defender_strategy[t]
+
+            newly_interdicted = self.interdiction_protocol.moving_interdiction(
+                current_attacker_positions,
+                current_defender_positions,
+                [unit.capture_radius for unit in self.moving_defender_units + self.stationary_defender_units]
+            )
+
+            for idx, is_interdicted in enumerate(newly_interdicted):
+                interdicted[idx] = interdicted[idx] or is_interdicted
+
+            for idx, position in enumerate(current_attacker_positions):
+                if interdicted[idx]:
+                    continue
+
+                for target in self.targets:
+                    if position == target.node and target.node not in reached_targets:
+                        moving_attacker_score += target.attacker_value
+                        defender_score += target.defender_value
+                        reached_targets.add(target.node)
+
+            if all(interdicted):
+                break
+
+        # Step 2: Handle stationary attackers
+        if self.num_stationary_attackers > 0:
+            stationary_attacker_positions = [
+                attacker_strategy[0][self.num_moving_attackers + idx]
+                for idx in range(self.num_stationary_attackers)
+            ]
+
+            stationary_interdictions = self.interdiction_protocol.stationary_interdiction(
+                stationary_attacker_positions,
+                defender_strategy,
+                self.interdiction_protocol.defense_time_threshold
+            )
+
+            for idx, position in enumerate(stationary_attacker_positions):
+                if not stationary_interdictions[idx] and position not in reached_targets:
+                    for target in self.targets:
+                        if position == target.node:
+                            stationary_attacker_score += target.attacker_value
+                            defender_score += target.defender_value
+                            reached_targets.add(target.node)
+
+        # Step 3: Penalize defender for steps taken
+        num_steps = 0
+        for d in range(len(defender_strategy[0])):  # iterate over each defender
+            path = [defender_strategy[t][d] for t in range(self.num_timesteps)]
+            steps = sum(1 for i in range(1, len(path)) if path[i] != path[i - 1])
+            num_steps += steps
+
+        defender_score -= defender_step_cost * num_steps
+
+
+        return moving_attacker_score + stationary_attacker_score, defender_score

@@ -1,4 +1,5 @@
 class Target:
-    def __init__(self, node, value):
+    def __init__(self, node, attacker_value, defender_value):
         self.node = node
-        self.value = value
+        self.attacker_value = attacker_value
+        self.defender_value = defender_value

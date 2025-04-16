@@ -7,6 +7,7 @@ import networkx as nx
 import random
 from security_game.security_game import SecurityGame
 from security_game.target import Target
+from shapely.geometry import Point
 
 class InfraSecurityGame:
     def __init__(self, power_df, block_gdf, power_weights, bbox, mode="block"):
@@ -16,7 +17,6 @@ class InfraSecurityGame:
         self.bbox = bbox
         self.mode = mode
         self.graph = None  # Security game graph
-        self.target_nodes = []  # Target nodes list
         self.home_base = None
         self.defender_strategies = None
         self.attacker_strategies = None
@@ -54,6 +54,11 @@ class InfraSecurityGame:
         north, south, east, west = self.bbox
         self.graph = ox.graph_from_bbox(north, south, east, west, network_type="drive")
         self.graph = nx.convert_node_labels_to_integers(self.graph)
+        self.graph = self.graph.to_undirected() # Turn this off when we want to implement directed graphs
+
+        for node in self.graph.nodes:
+            self.graph.nodes[node]['target'] = False # Replace 'new_attribute' and 'some_value'
+            self.graph.nodes[node]['score'] = 0 # Replace 'new_attribute' and 'some_value'
         
         min_x, min_y, max_x, max_y = (
             min(nx.get_node_attributes(self.graph, "x").values()),
@@ -70,20 +75,18 @@ class InfraSecurityGame:
         self.power_df["geometry"] = self.power_df.apply(lambda row: Point(row["x"], row["y"]), axis=1)
         power_gdf = gpd.GeoDataFrame(self.power_df, geometry="geometry", crs="EPSG:4326")
         
-        target_nodes = {}
+        targets_di = {}
         for _, row in power_gdf.iterrows():
             closest_node = ox.distance.nearest_nodes(self.graph, row["x"], row["y"])
             target_value = row["population"] * self.power_weights.get(row["power"], 1.0)
             
-            if closest_node in target_nodes:
-                target_nodes[closest_node].value += target_value
+            if closest_node in targets_di:
+                targets_di[closest_node][1] += target_value
             else:
-                target_nodes[closest_node] = Target(closest_node, target_value)
+                targets_di[closest_node] = [closest_node, target_value]
             
             self.graph.nodes[closest_node]["target"] = True  
-            self.graph.nodes[closest_node]["value"] = target_nodes[closest_node].value
-        
-        self.target_nodes = list(target_nodes.values())
+            self.graph.nodes[closest_node]["score"] = targets_di[closest_node][1]
 
     def draw_graph(self):
         if self.graph is None:
@@ -94,7 +97,7 @@ class InfraSecurityGame:
         ox.plot_graph(self.graph, ax=ax, node_size=50, edge_color="gray", show=False, close=False)
         
         target_xs, target_ys, sizes = [], [], []
-        for target in self.target_nodes:
+        for target in self.targets:
             x, y = self.graph.nodes[target.node]["x"], self.graph.nodes[target.node]["y"]
             # Annotate target value in white
             ax.annotate(f"{target.value:.1f}", (x, y), textcoords="offset points", xytext=(5, 5), fontsize=8, color="white")
@@ -125,21 +128,26 @@ class InfraSecurityGame:
         plt.title("Power Grid Infra Security Game")
         plt.show()
     
-    def generate(self, num_attackers, num_defenders, num_timesteps, home_base=None, interdiction_protocol=None, defense_time_threshold=2):
+    def generate(self, num_attackers, num_defenders, home_base_assignments, num_timesteps, interdiction_protocol=None, defense_time_threshold=2, generate_utility_matrix=False, schedule_form=False, general_sum=False, attacker_feature_value=1, defender_feature_value=1, defender_step_cost=0, simple=True, attacker_penalty_factor=3, defender_penalty_factor=3, extra_coverage_weight=1.0):
         self.create_security_game_graph()
     
-        if home_base is None:
-            self.home_base = random.choice(list(self.graph.nodes))
+        if general_sum:
+            targets = [
+                Target(node=i, attacker_value=data["score"]*attacker_feature_value, defender_value=-data["score"]*defender_feature_value)
+                for i, data in self.graph.nodes(data=True)
+                if data["target"] == True
+            ]
         else:
-            if home_base in self.graph.nodes:
-                self.home_base = home_base  # Fix: Assign node label, not attributes
-            else:
-                raise ValueError(f"Node {home_base} does not exist in the graph.")
-    
-        targets = [
-            Target(node=t.node, value=t.value)
-            for t in self.target_nodes
-        ]
+            targets = [
+                Target(node=i, attacker_value=data["score"], defender_value=-data["score"])
+                for i, data in self.graph.nodes(data=True)
+                if data["target"] == True
+            ]
+
+        
+        self.targets = targets
+        self.home_bases = home_base_assignments
+        home_base_labels = [(node,) for node in self.home_bases]
     
         game = SecurityGame(
             num_attackers=num_attackers,
@@ -147,12 +155,22 @@ class InfraSecurityGame:
             graph=self.graph,
             targets=targets,
             num_timesteps=num_timesteps,
-            defender_start_nodes=[self.home_base],
-            defender_end_nodes=[self.home_base],
-            interdiction_protocol=interdiction_protocol,
-            defense_time_threshold=defense_time_threshold,
+            defender_start_nodes=home_base_labels,
+            defender_end_nodes=home_base_labels,
+            interdiction_protocol=interdiction_protocol
         )
-    
-        self.defender_strategies = game.generate_strategy_matrix("defender")
-        self.attacker_strategies = game.generate_strategy_matrix("attacker")
-        self.utility_matrix = game.generate_utility_matrix()
+
+        if schedule_form:
+            self.defender_strategies = None
+            self.attacker_strategies = None
+            self.utility_matrix, self.attacker_utility_matrix, self.defender_utility_matrix = None, None, None
+            sf_defender_step_cost = defender_step_cost if general_sum else 0
+            self.schedule_form_dict = game.schedule_form(generate_utility_matrix, simple, attacker_penalty_factor, defender_penalty_factor, extra_coverage_weight, defender_step_cost=sf_defender_step_cost)
+        else:
+            self.defender_strategies = game.generate_strategy_matrix("defender")
+            self.attacker_strategies = game.generate_strategy_matrix("attacker")
+            self.schedule_form_dict = None
+            if generate_utility_matrix:
+                self.utility_matrix, self.attacker_utility_matrix, self.defender_utility_matrix = game.generate_utility_matrix(general_sum, defender_step_cost)
+            else:
+                self.utility_matrix, self.attacker_utility_matrix, self.defender_utility_matrix = None, None, None

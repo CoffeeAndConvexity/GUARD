@@ -60,21 +60,26 @@ class GreenSecurityGame:
                     grid_dict[(row, col)] = 0
         return grid_dict
 
-    def convert_to_graph(self, grid_dict):
+    def convert_to_graph(self, grid_dict, general_sum):
         G = nx.Graph()
 
-        max_value = max(grid_dict.values())
-        min_value = min(grid_dict.values())
-        range_value = max_value - min_value
+        if general_sum:
+            for (row, col), raw_value in grid_dict.items():
+                inverted_row = self.num_rows - 1 - row
+                G.add_node((inverted_row, col), score=raw_value, position=(row, col))
+        else:
+            max_value = max(grid_dict.values())
+            min_value = min(grid_dict.values())
+            range_value = max_value - min_value
 
-        normalized_values = {
-            key: (value - min_value) / range_value if range_value > 0 else 1.0
-            for key, value in grid_dict.items()
-        }
+            normalized_values = {
+                key: (value - min_value) / range_value if range_value > 0 else 1.0
+                for key, value in grid_dict.items()
+            }
 
-        for (row, col), norm_value in normalized_values.items():
-            inverted_row = self.num_rows - 1 - row
-            G.add_node((inverted_row, col), score=norm_value, position=(row, col))
+            for (row, col), norm_value in normalized_values.items():
+                inverted_row = self.num_rows - 1 - row
+                G.add_node((inverted_row, col), score=norm_value, position=(row, col))
 
         for inverted_row in range(self.num_rows):
             for col in range(self.num_columns):
@@ -85,21 +90,21 @@ class GreenSecurityGame:
 
         return nx.convert_node_labels_to_integers(G, label_attribute="position")
 
-    def get_home_base_label(self, home_base):
+    def get_node_label(self, node):
         """
-        Get the integer label of the home base node in the graph.
+        Get the integer label of the any node in the graph.
     
-        returns: Integer label of the home base node.
-        raises: ValueError: If the home base node is not found in the graph.
+        returns: Integer label of the node.
+        raises: ValueError: If the node is not found in the graph.
         """
         if not hasattr(self, 'graph') or self.graph is None:
             raise ValueError("Graph has not been created. Run generate() first.")
     
-        for node, attributes in self.graph.nodes(data=True):
-            if attributes.get("position") == home_base:
-                return node
+        for n, attributes in self.graph.nodes(data=True):
+            if attributes.get("position") == node:
+                return n
     
-        raise ValueError(f"Home base node with position {self.home_base} not found in the graph.")
+        raise ValueError(f"Home base node with position {node} not found in the graph.")
 
     def draw_graph(self, figsize=(12, 10), base_node_size=300, font_size=10, cmap='Blues'):
         """
@@ -163,19 +168,32 @@ class GreenSecurityGame:
         plt.axis("off")
         plt.show()
 
-    def generate(self, num_attackers, num_defenders, home_base, num_timesteps, interdiction_protocol=None, defense_time_threshold=2):
+    def generate(self, num_attackers, num_defenders, home_base_assignments, num_timesteps, interdiction_protocol=None, defense_time_threshold=2, generate_utility_matrix=False, schedule_form=False, general_sum=False, attacker_animal_value=1, defender_animal_value=1, defender_step_cost=0, simple=True, attacker_penalty_factor=3, defender_penalty_factor=3, extra_coverage_weight=1.0):
         grid, _ = self.create_grid()
         scores = self.get_scores()
         scores = self.fill_missing_cells(scores)
-        self.graph = self.convert_to_graph(scores)
+        self.graph = self.convert_to_graph(scores, general_sum)
 
-        targets = [
-            Target(node=i, value=data["score"])
-            for i, data in self.graph.nodes(data=True)
-            if data["score"] > 0
-        ]
+        if general_sum:
+            targets = [
+                Target(node=i, attacker_value=data["score"]*attacker_animal_value, defender_value=-data["score"]*defender_animal_value)
+                for i, data in self.graph.nodes(data=True)
+                if data["score"] > 0
+            ]
+        else:
+            targets = [
+                Target(node=i, attacker_value=data["score"], defender_value=-data["score"])
+                for i, data in self.graph.nodes(data=True)
+                if data["score"] > 0
+            ]
 
-        home_base_label = self.get_home_base_label(home_base)
+
+        self.targets = targets
+
+        home_base_labels = [(self.get_node_label(node),) for node in home_base_assignments]
+        
+        # Home bases in GSGs are 1 per defender
+        self.home_bases = [tup[0] for tup in home_base_labels]
 
         game = SecurityGame(
             num_attackers=num_attackers,
@@ -183,13 +201,23 @@ class GreenSecurityGame:
             graph=self.graph,
             targets=targets,
             num_timesteps=num_timesteps,
-            defender_start_nodes=[home_base_label],
-            defender_end_nodes=[home_base_label],
-            interdiction_protocol=interdiction_protocol,
-            defense_time_threshold=defense_time_threshold,
+            defender_start_nodes=home_base_labels,
+            defender_end_nodes=home_base_labels,
+            interdiction_protocol=interdiction_protocol
         )
 
-        self.defender_strategies = game.generate_strategy_matrix("defender")
-        self.attacker_strategies = game.generate_strategy_matrix("attacker")
+        if schedule_form:
+            self.defender_strategies = None
+            self.attacker_strategies = None
+            self.utility_matrix, self.attacker_utility_matrix, self.defender_utility_matrix = None, None, None
+            sf_defender_step_cost = defender_step_cost if general_sum else 0
+            self.schedule_form_dict = game.schedule_form(generate_utility_matrix, simple, attacker_penalty_factor, defender_penalty_factor, extra_coverage_weight, defender_step_cost=sf_defender_step_cost)
+        else:
+            self.defender_strategies = game.generate_strategy_matrix("defender")
+            self.attacker_strategies = game.generate_strategy_matrix("attacker")
+            self.schedule_form_dict = None
+            if generate_utility_matrix:
+                self.utility_matrix, self.attacker_utility_matrix, self.defender_utility_matrix = game.generate_utility_matrix(general_sum, defender_step_cost)
+            else:
+                self.utility_matrix, self.attacker_utility_matrix, self.defender_utility_matrix = None, None, None
 
-        self.utility_matrix = game.generate_utility_matrix()
