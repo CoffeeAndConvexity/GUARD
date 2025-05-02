@@ -2,10 +2,11 @@ import gurobipy as gp
 from gurobipy import GRB
 import numpy as np
 from collections import defaultdict, Counter
+import time
 
-from nash import nash
+from solvers.nash import nash
 
-def best_response_d(graph, D, T, S, tau, home_base_map, P, V):
+def best_response_d(graph, D, T, S, tau, home_base_map, P, V, force_return=False):
     """
     Solves the Defender Best Response (DBR) problem using Gurobi.
 
@@ -15,7 +16,7 @@ def best_response_d(graph, D, T, S, tau, home_base_map, P, V):
     - T: Number of timesteps (including t=0. Fix in future).
     - S: Set of attacker-selected targets (nodes).
     - tau: Minimum timesteps required for interdiction.
-    - home_base_map: Each defender D: their home base node.
+    - home_base_map: Each defender D: their home base node(s).
     - P: Dictionary of attacker target selection probabilities {node: probability}.
     - V: Dictionary of target values {node: value}.
 
@@ -33,13 +34,22 @@ def best_response_d(graph, D, T, S, tau, home_base_map, P, V):
     v = m.addVars(graph.nodes, range(T + 1), range(D), vtype=GRB.BINARY, name="v")  # Defender presence
     g = m.addVars(S, vtype=GRB.BINARY, name="g")  # Interdiction status
 
-    # 1. Defender Starts and Ends at Home Base
+    # 1. Defender Starts and Ends at a Home Base (optionally same home base)
     for d in range(D):
-        home_base = home_base_map[d]
-        m.addConstr(v[home_base, 0, d] == 1, name=f"start_home_{d}")
-        m.addConstr(v[home_base, T, d] == 1, name=f"end_home_{d}")
+        home_bases = home_base_map[d]
+
+        if force_return:
+            # Start and end must be at the same home base node
+            for hb in home_bases:
+                m.addConstr(v[hb, 0, d] == v[hb, T, d], name=f"force_return_same_{hb}_{d}")
+            m.addConstr(gp.quicksum(v[i, 0, d] for i in home_bases) == 1, name=f"start_home_{d}")
+        else:
+            # Start and end can be at different home bases
+            m.addConstr(gp.quicksum(v[i, 0, d] for i in home_bases) == 1, name=f"start_home_{d}")
+            m.addConstr(gp.quicksum(v[i, T, d] for i in home_bases) == 1, name=f"end_home_{d}")
+
         for i in graph.nodes:
-            if i != home_base:
+            if i not in home_bases:
                 m.addConstr(v[i, 0, d] == 0, name=f"no_start_{i}_{d}")
                 m.addConstr(v[i, T, d] == 0, name=f"no_end_{i}_{d}")
 
@@ -85,9 +95,7 @@ def best_response_d(graph, D, T, S, tau, home_base_map, P, V):
         print(f"Optimization did not converge. Status: {m.Status}")
     return paths
 
-from collections import Counter
-
-def get_interdiction_probabilities(D_d, T, defender_actions):
+def get_interdiction_probabilities(D_d, T, defender_actions,tau):
     num_targets = len(T)
     target_probabilities = {t.node: 0 for t in T}
     target_probabilities[None] = 0
@@ -104,27 +112,29 @@ def get_interdiction_probabilities(D_d, T, defender_actions):
                 if node in target_visit_counts:
                     target_visit_counts[node] += 1
         
-        # Update target probabilities for being visited >= 2 times
+        # Update target probabilities for being visited >= tau times
         for target in T:
-            if target_visit_counts[target.node] >= 2:
+            if target_visit_counts[target.node] >= tau:
                 target_probabilities[target.node] += prob
 
     return target_probabilities
 
 def best_response_a(P_t, T, k):
     nodes = [t.node for t in T]
-    scores = [t.value*(1-P_t[t.node]) for t in T]
+    scores = [t.attacker_value*(1-P_t[t.node]) for t in T]
     return tuple([x for _, x in sorted(zip(scores, nodes),reverse=True)][:min(len(T),k)])
     # return tuple(sorted([t.node for t in T], key=lambda node: next(t.value for t in T if t.node == node) * (1 - P_t[node]), reverse=True)[:k])
 
-def get_interdictions(Tdi, defender_action):
+def get_interdictions(Tdi, defender_action, tau):
     visited = [n for path in defender_action for n in path]
     c = Counter(visited)
-    return [t for t in Tdi.keys() if c[t] >= 2]
+    return [t for t in Tdi.keys() if c[t] >= tau]
 
-def get_score(attacker_action, defender_action, Tdi):
-    interdictions = get_interdictions(Tdi, defender_action)
-    return -sum(list(set([Tdi[t] if t not in interdictions and t is not None else 0 for t in attacker_action])))
+def get_score(attacker_action, defender_action, Tdi, tau):
+    interdictions = get_interdictions(Tdi, defender_action, tau)
+    # print("=========scores calculated out============")
+    # print(list([Tdi[t] if t not in interdictions and t is not None else 0 for t in attacker_action]))
+    return -sum(list([Tdi[t] if t not in interdictions and t is not None else 0 for t in attacker_action]))
 
 def get_attack_probabilities(D_a, attacker_actions, Tdi):
     target_probabilities = defaultdict(float)
@@ -141,14 +151,14 @@ def get_attack_probabilities(D_a, attacker_actions, Tdi):
 
     return dict(target_probabilities)
 
-def expand_subgame(U, A_a, A_d, BR_a_in_U, BR_d_in_U, Tdi):
+def expand_subgame(U, A_a, A_d, BR_a_in_U, BR_d_in_U, Tdi, tau):
     """
     Expands the utility matrix U when A and/or B grow.
     
     Parameters:
     - U (np.array): Existing utility matrix of shape (n, m).
-    - A (list): Updated list of attacker strategies.
-    - B (list): Updated list of defender strategies.
+    - A (list): Updated list of attacker actions.
+    - B (list): Updated list of defender actions.
     - A_expanded (bool): Flag indicating if A was expanded.
     - B_expanded (bool): Flag indicating if B was expanded.
     - get_score (function): Function to compute score for new pairs.
@@ -180,78 +190,110 @@ def expand_subgame(U, A_a, A_d, BR_a_in_U, BR_d_in_U, Tdi):
     # Compute new **column** (if A_a expanded)
     if not BR_a_in_U:
         for i in range(new_n):  # Iterate over all rows (old + new)
-            new_U[i, new_m-1] = get_score(A_a[-1], A_d[i], Tdi)
+            # print("*************")
+            # print(get_score(A_a[-1], A_d[i], Tdi, tau))
+            test = get_score(A_a[-1], A_d[i], Tdi, tau)
+            # print(test)
+            new_U[i, new_m-1] = get_score(A_a[-1], A_d[i], Tdi, tau)
+            # new_U[i, new_m-1] = test
+            # print(new_U[i, new_m-1])
     
     # Compute new **row** (if A_d expanded)
     if not BR_d_in_U:
         for i in range(new_m):  # Iterate over all columns (old + new)
-            new_U[new_n-1, i] = get_score(A_a[i], A_d[-1], Tdi)
-
+            new_U[new_n-1, i] = get_score(A_a[i], A_d[-1], Tdi, tau)
+    # print(new_U)
     return new_U
 
-def double_oracle(game, tau, eps, initial_subgame_size=2, verbose=True):
-    Tdi = {t.node: t.value for t in game.targets}
+def double_oracle(game, eps=1e-6, verbose=True):
+    Tdi = {t.node: t.attacker_value for t in game.targets}
     Tdi[None] = 0
 
-    num_timesteps = len(game.defender_strategies[0])
-    num_attackers = game.attacker_strategies.shape[2]
-    num_defenders = game.defender_strategies.shape[2]
-    home_base_mapping = {i:game.home_bases[i] for i in range(num_defenders)}
-
-    #Preprocess attacker action matrix into list of selection tuples
-    a_selections = [tuple(game.attacker_strategies[i][0]) for i in range(len(game.attacker_strategies))]
+    home_base_mapping = {i:game.home_bases[i] for i in range(game.num_defenders)}
 
     #Initialize Subgame
-    A_a = a_selections[:initial_subgame_size]
-    A_d = game.defender_strategies[:initial_subgame_size]
-    
-    subgame_rows = []
-    for i in range(initial_subgame_size):
-        subgame_rows.append([get_score(A_a[j], A_d[i], Tdi) for j in range(initial_subgame_size)])
-    U_subgame = np.vstack(subgame_rows)
-    
+    A_a = [best_response_a({t.node:0 for t in game.targets}, game.targets, game.num_attackers)]
+    P_a = get_attack_probabilities([1], A_a, Tdi) # D_a initial, initial actions, targets
+    BR_d0 = best_response_d(game.graph, game.num_defenders, game.num_timesteps-1, [t.node for t in game.targets], 
+    game.defense_time_threshold, home_base_mapping, P_a, {t.node:t.attacker_value for t in game.targets}, game.force_return)
+    A_d = np.array(BR_d0).T[np.newaxis, :, :]
+    # print("initial A_a, A_d")
+    # print(A_a)
+    # print(A_d)
+    #a_selections = [tuple(game.attacker_actions[i][0]) for i in range(len(game.attacker_actions))]
+    # A_a = a_selections[:initial_subgame_size]
+    # A_d = game.defender_actions[:initial_subgame_size]
+    # print(A_a,A_d)
+    # subgame_rows = []
+    # for i in range(initial_subgame_size):
+    #     subgame_rows.append([get_score(A_a[j], A_d[i], Tdi, game.defense_time_threshold) for j in range(initial_subgame_size)])
+    subgame_rows = [[get_score(A_a[0], A_d[0], Tdi, game.defense_time_threshold)]]
+    U_subgame = np.vstack(subgame_rows).astype(float)
+    # print("initial subgame")
+    # print(U_subgame)
+    # print(U_subgame)
     gap = np.inf
     c = 0
+    iteration_times = []
+    gaps = []
         
     while gap > eps:
+        start = time.time()
         BR_a_in_U = False
         BR_d_in_U = False
         
         #Solve subgame
         D_a, D_d, u_s = nash(U_subgame)
+        # print("D_a, D_d, u nash")
+        # print(D_a, D_d, u_s)
         
         #Get useful distributions for best responses
         P_a = get_attack_probabilities(D_a, A_a, Tdi)
-        P_d = get_interdiction_probabilities(D_d, game.targets, A_d)
-        
+        P_d = get_interdiction_probabilities(D_d, game.targets, A_d, game.defense_time_threshold)
+        # print("P_a, P_d")
+        # print(P_a,P_d)
         #Get best responses
-        BR_a = best_response_a(P_d, game.targets, num_attackers)
-        BR_d = best_response_d(game.graph, num_defenders, num_timesteps-1, [t.node for t in game.targets], tau, home_base_mapping, P_a, [t.value for t in game.targets])
-
+        BR_a = best_response_a(P_d, game.targets, game.num_attackers)
+        BR_d = best_response_d(game.graph, game.num_defenders, game.num_timesteps-1, [t.node for t in game.targets], game.defense_time_threshold, home_base_mapping, P_a, {t.node:t.attacker_value for t in game.targets}, game.force_return)
+        # print("BRa, BRd")
+        # print(BR_a,BR_d)
         #Get best response utilities and equilibrium gap
         u_BRa_Dd = -sum([(1-P_d[t])*Tdi[t] for t in list(set(BR_a)) if t is not None])
-        u_BRd_Da = -sum([Tdi[t]*P_a[t] if t not in get_interdictions(Tdi, BR_d) else 0 for t in P_a])
-        
+        u_BRd_Da = -sum([Tdi[t]*P_a[t] if t not in get_interdictions(Tdi, BR_d, game.defense_time_threshold) else 0 for t in P_a])
+        # print("u_BRa_Dd,u_BRd_Da")
+        # print(u_BRa_Dd)
+        # print(u_BRd_Da)
         gap = abs(u_BRa_Dd - u_BRd_Da)
-        
+        gaps.append(gap)
+        # print(f"gap:{gap}")
         #Expand subgame action sets and subgame U matrix
         if BR_a not in A_a:
+            # print("here 1!!!!")
             A_a.append(BR_a)
         else:
             BR_a_in_U = True
+        # print(f"BR A IN U{BR_a_in_U}")
 
-        if not np.any(np.all(np.array(BR_d).T == A_d, axis=(1, 2))):
-            append_BR_d = np.expand_dims(np.array(BR_d).T, axis=0)
+        BR_d_arr = np.array(BR_d).T  # shape (T, D)
+        BR_d_in_U = any(np.array_equal(BR_d_arr, a) for a in A_d)
+
+        if not BR_d_in_U:
+            append_BR_d = np.expand_dims(BR_d_arr, axis=0)
             A_d = np.concatenate((A_d, append_BR_d), axis=0)
         else:
             BR_d_in_U = True
-
-        U_subgame = expand_subgame(U_subgame, A_a, A_d, BR_a_in_U, BR_d_in_U, Tdi)
-
+        # print(f"BR D IN U{BR_d_in_U}")
+        # print("U subgame before expansion")
+        # print(U_subgame)
+        U_subgame = expand_subgame(U_subgame, A_a, A_d, BR_a_in_U, BR_d_in_U, Tdi, game.defense_time_threshold)
+        # print("U subgame after expansion")
+        # print(U_subgame)
+        end = time.time()
+        iteration_times.append(end-start)
         c+=1
         
         if verbose:
             print(f" U(D_d, BR A): {u_BRa_Dd}, U(D_a, BR D): {u_BRd_Da}")
             print(f"Current Gap: {gap}")
 
-    return D_a, D_d, u_s, c
+    return D_a, D_d, u_s, A_a, A_d, c, iteration_times, gaps

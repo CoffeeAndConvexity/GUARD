@@ -44,33 +44,33 @@ def plot_animal_locations(dataframe, coordinate_rectangle, title="Animal Locatio
     plt.show()
 
 
-    def plot_power_features(power_df, block_gdf):
-        fig, ax = plt.subplots(figsize=(10, 10))
+def plot_power_features(power_df, block_gdf):
+    fig, ax = plt.subplots(figsize=(10, 10))
 
-        # Plot blocks as background
-        block_gdf.plot(ax=ax, color="lightgray", edgecolor="black", alpha=0.5)
+    # Plot blocks as background
+    block_gdf.plot(ax=ax, color="lightgray", edgecolor="black", alpha=0.5)
 
-        # Normalize population for marker size
-        max_pop = power_df["population"].max()
-        power_df["size"] = (power_df["population"] / max_pop) * 300  # Scale marker size
+    # Normalize population for marker size
+    max_pop = power_df["population"].max()
+    power_df["size"] = (power_df["population"] / max_pop) * 300  # Scale marker size
 
-        # Assign color based on type (node or way)
-        power_df["color"] = power_df["id"].apply(lambda x: "blue" if x.startswith("node") else "green")
+    # Assign color based on type (node or way)
+    power_df["color"] = power_df["id"].apply(lambda x: "blue" if x.startswith("node") else "green")
 
-        # Plot power features with different colors
-        scatter = ax.scatter(
-            power_df["x"], power_df["y"], 
-            s=power_df["size"], c=power_df["color"], 
-            alpha=0.6, edgecolors="black"
-        )
+    # Plot power features with different colors
+    scatter = ax.scatter(
+        power_df["x"], power_df["y"], 
+        s=power_df["size"], c=power_df["color"], 
+        alpha=0.6, edgecolors="black"
+    )
 
-        # Add legend manually
-        legend_labels = {"blue": "Nodes", "green": "Ways"}
-        handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) 
-                for color in legend_labels.keys()]
-        ax.legend(handles, legend_labels.values(), loc="upper right")
+    # Add legend manually
+    legend_labels = {"blue": "Nodes", "green": "Ways"}
+    handles = [plt.Line2D([0], [0], marker='o', color='w', markerfacecolor=color, markersize=10) 
+            for color in legend_labels.keys()]
+    ax.legend(handles, legend_labels.values(), loc="upper right")
 
-        plt.xlabel("Longitude")
-        plt.ylabel("Latitude")
-        plt.title("Power Features Sized by Population (Nodes vs. Ways)")
-        plt.show()
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+    plt.title("Power Features Sized by Population (Nodes vs. Ways)")
+    plt.show()

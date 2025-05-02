@@ -72,7 +72,6 @@ def get_density_scores(df, coordinate_rectangle, num_columns, num_rows):
     # Count occurrences in each grid cell and apply animal weight
     raw_counts = cell_df.groupby(['row', 'col']).size().to_dict()
     density_scores = {cell: count * weight for cell, count in raw_counts.items()}
-
     return density_scores
 
 def get_centroid_scores(df, coordinate_rectangle, num_columns, num_rows, num_clusters):
@@ -124,6 +123,7 @@ def get_centroid_scores(df, coordinate_rectangle, num_columns, num_rows, num_clu
         cell_key = (row, col)
         
         adjusted_score = cluster_sizes[cluster_idx] * weight
+        # adjusted_score = cluster_sizes[cluster_idx]
         centroid_scores[cell_key] = centroid_scores.get(cell_key, 0) + adjusted_score
 
     return centroid_scores

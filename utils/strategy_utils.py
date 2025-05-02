@@ -166,3 +166,35 @@ def get_shortest_path_permutation(graph, start_node, targets):
             min_path = [start_node] + total_path
 
     return min_path, min_cost
+
+
+def deduplicate_simple_schedules(schedule_di):
+    deduped_di = {}
+
+    for defender, sched_list in schedule_di.items():
+        best_costs = {}
+        for sched, cost in sched_list:
+            # Convert set to frozenset for use as dictionary key
+            sched_key = frozenset(sched)
+            if sched_key not in best_costs or cost < best_costs[sched_key]:
+                best_costs[sched_key] = cost
+        
+        # Convert back to list of (set, cost) tuples
+        deduped_di[defender] = [(set(s), c) for s, c in best_costs.items()]
+
+    return deduped_di
+
+
+def deduplicate_general_schedules(schedule_di):
+    deduped_di = {}
+
+    for defender, sched_list in schedule_di.items():
+        best_costs = {}
+        for sched, cost in sched_list:
+            sched_key = frozenset(sched)  # use frozenset to allow set as dict key
+            if sched_key not in best_costs or cost < best_costs[sched_key]:
+                best_costs[sched_key] = cost
+
+        deduped_di[defender] = [(set(s), c) for s, c in best_costs.items()]
+
+    return deduped_di
