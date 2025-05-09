@@ -17,49 +17,78 @@ def generate_random_target_utility_matrix_like(target_utility_matrix, general_su
     """
     Randomizes a 4×T target utility matrix for schedule-form games.
 
-    Parameters:
-    - target_utility_matrix: np.ndarray of shape (4, T)
-    - general_sum: bool, whether the game is general-sum or zero-sum
-    - respect_sign_roles: bool, if True in general-sum mode, defenders are only assigned values from the original defender range,
-      and attackers from the original attacker range. Prevents role sign reversal.
+    If general_sum:
+        - Randomize covered/uncovered values separately for attacker and defender.
+        - Ensure |covered| <= |uncovered| by swapping values when needed.
+        - If respect_sign_roles is True, defender values remain negative, attacker values remain positive.
+
+    If zero-sum:
+        - Randomize attacker values, and set defender values to be their negative symmetric.
 
     Returns:
-    - randomized_matrix: np.ndarray of shape (4, T)
+        np.ndarray of shape (4, T)
     """
+    T = target_utility_matrix.shape[1]
+
     if general_sum:
+        # Row indices
+        DEF_U, DEF_C, ATT_C, ATT_U = 0, 1, 2, 3
+
+        # Get min/max ranges for each type
+        def_uncovered_vals = target_utility_matrix[DEF_U]
+        def_covered_vals   = target_utility_matrix[DEF_C]
+        att_covered_vals   = target_utility_matrix[ATT_C]
+        att_uncovered_vals = target_utility_matrix[ATT_U]
+
+        def_u_min, def_u_max = def_uncovered_vals.min(), def_uncovered_vals.max()
+        def_c_min, def_c_max = def_covered_vals.min(), def_covered_vals.max()
+        att_c_min, att_c_max = att_covered_vals.min(), att_covered_vals.max()
+        att_u_min, att_u_max = att_uncovered_vals.min(), att_uncovered_vals.max()
+
+        # Sample random values for each row independently
+        def_uncovered_rand = np.random.uniform(def_u_min, def_u_max, size=T)
+        def_covered_rand   = np.random.uniform(def_c_min, def_c_max, size=T)
+        att_covered_rand   = np.random.uniform(att_c_min, att_c_max, size=T)
+        att_uncovered_rand = np.random.uniform(att_u_min, att_u_max, size=T)
+
+        # Enforce |covered| ≤ |uncovered| by swapping if needed
+        for t in range(T):
+            # Defender
+            if abs(def_covered_rand[t]) > abs(def_uncovered_rand[t]):
+                def_covered_rand[t], def_uncovered_rand[t] = def_uncovered_rand[t], def_covered_rand[t]
+
+            # Attacker
+            if abs(att_covered_rand[t]) > abs(att_uncovered_rand[t]):
+                att_covered_rand[t], att_uncovered_rand[t] = att_uncovered_rand[t], att_covered_rand[t]
+
         if respect_sign_roles:
-            T = target_utility_matrix.shape[1]
+            # Ensure defenders are negative, attackers positive
+            def_covered_rand = -np.abs(def_covered_rand)
+            def_uncovered_rand = -np.abs(def_uncovered_rand)
+            att_covered_rand = np.abs(att_covered_rand)
+            att_uncovered_rand = np.abs(att_uncovered_rand)
 
-            # Split original values
-            defender_rows = target_utility_matrix[0:2, :]
-            attacker_rows = target_utility_matrix[2:4, :]
-
-            # Get independent min/max ranges
-            def_min = np.min(defender_rows)
-            def_max = np.max(defender_rows)
-            att_min = np.min(attacker_rows)
-            att_max = np.max(attacker_rows)
-
-            defender_random = np.random.uniform(low=def_min, high=def_max, size=(2, T))
-            attacker_random = np.random.uniform(low=att_min, high=att_max, size=(2, T))
-
-            randomized_matrix = np.vstack([defender_random, attacker_random])
-        else:
-            min_val = np.min(target_utility_matrix)
-            max_val = np.max(target_utility_matrix)
-            randomized_matrix = np.random.uniform(low=min_val, high=max_val, size=target_utility_matrix.shape)
-
+        randomized_matrix = np.vstack([
+            def_uncovered_rand,
+            def_covered_rand,
+            att_covered_rand,
+            att_uncovered_rand
+        ])
         return randomized_matrix
 
     else:
-        # Zero-sum: only randomize attacker rows, mirror for defenders
+        # Zero-sum: randomize attacker utilities, defender is symmetric negative
         abs_vals = np.abs(target_utility_matrix)
         min_val = np.min(abs_vals)
         max_val = np.max(abs_vals)
 
-        T = target_utility_matrix.shape[1]
         attacker_covered = np.random.uniform(low=min_val, high=max_val, size=T)
         attacker_uncovered = np.random.uniform(low=min_val, high=max_val, size=T)
+
+        # Enforce |covered| ≤ |uncovered|
+        for t in range(T):
+            if attacker_covered[t] > attacker_uncovered[t]:
+                attacker_covered[t], attacker_uncovered[t] = attacker_uncovered[t], attacker_covered[t]
 
         defender_covered = -attacker_covered
         defender_uncovered = -attacker_uncovered
@@ -70,7 +99,6 @@ def generate_random_target_utility_matrix_like(target_utility_matrix, general_su
             attacker_covered,     # row 2
             attacker_uncovered    # row 3
         ])
-
         return randomized_matrix
 
 
@@ -112,3 +140,90 @@ def generate_random_schedule_mapping_like(original_schedule_mapping, num_samples
         0: new_schedules.copy(),
         1: new_schedules.copy()
     }
+
+
+def generate_random_target_utility_matrix_like_v2(target_utility_matrix, general_sum, respect_sign_roles=False):
+    """
+    Randomizes a 4×T target utility matrix for schedule-form games.
+
+    If general_sum:
+        - Randomize all values (def/att, covered/uncovered) from a single shared range.
+        - Range is defined as: min(abs(covered values)), max(abs(uncovered values)).
+        - Enforce |covered| ≤ |uncovered| per player via flipping if needed.
+        - If respect_sign_roles is True, defender values remain negative, attacker values remain positive.
+
+    If zero-sum:
+        - Randomize attacker values, and set defender values to be their negative symmetric.
+
+    Returns:
+        np.ndarray of shape (4, T)
+    """
+    T = target_utility_matrix.shape[1]
+
+    if general_sum:
+        # Row indices
+        DEF_U, DEF_C, ATT_C, ATT_U = 0, 1, 2, 3
+
+        # Get global range from all values
+        all_covered = np.abs(np.concatenate([
+            target_utility_matrix[DEF_C],
+            target_utility_matrix[ATT_C]
+        ]))
+        all_uncovered = np.abs(np.concatenate([
+            target_utility_matrix[DEF_U],
+            target_utility_matrix[ATT_U]
+        ]))
+
+        range_min = np.min(all_covered)
+        range_max = np.max(all_uncovered)
+
+        # Sample values from this unified range
+        def_covered_rand   = np.random.uniform(range_min, range_max, size=T)
+        def_uncovered_rand = np.random.uniform(range_min, range_max, size=T)
+        att_covered_rand   = np.random.uniform(range_min, range_max, size=T)
+        att_uncovered_rand = np.random.uniform(range_min, range_max, size=T)
+
+        # Flip values if |covered| > |uncovered|
+        for t in range(T):
+            if abs(def_covered_rand[t]) > abs(def_uncovered_rand[t]):
+                def_covered_rand[t], def_uncovered_rand[t] = def_uncovered_rand[t], def_covered_rand[t]
+            if abs(att_covered_rand[t]) > abs(att_uncovered_rand[t]):
+                att_covered_rand[t], att_uncovered_rand[t] = att_uncovered_rand[t], att_covered_rand[t]
+
+        if respect_sign_roles:
+            def_covered_rand = -np.abs(def_covered_rand)
+            def_uncovered_rand = -np.abs(def_uncovered_rand)
+            att_covered_rand = np.abs(att_covered_rand)
+            att_uncovered_rand = np.abs(att_uncovered_rand)
+
+        randomized_matrix = np.vstack([
+            def_uncovered_rand,
+            def_covered_rand,
+            att_covered_rand,
+            att_uncovered_rand
+        ])
+        return randomized_matrix
+
+    else:
+        # Zero-sum version (same as before)
+        abs_vals = np.abs(target_utility_matrix)
+        min_val = np.min(abs_vals)
+        max_val = np.max(abs_vals)
+
+        attacker_covered = np.random.uniform(low=min_val, high=max_val, size=T)
+        attacker_uncovered = np.random.uniform(low=min_val, high=max_val, size=T)
+
+        for t in range(T):
+            if attacker_covered[t] > attacker_uncovered[t]:
+                attacker_covered[t], attacker_uncovered[t] = attacker_uncovered[t], attacker_covered[t]
+
+        defender_covered = -attacker_covered
+        defender_uncovered = -attacker_uncovered
+
+        randomized_matrix = np.vstack([
+            defender_uncovered,
+            defender_covered,
+            attacker_covered,
+            attacker_uncovered
+        ])
+        return randomized_matrix

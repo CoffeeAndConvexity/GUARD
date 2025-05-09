@@ -137,9 +137,22 @@ class GreenSecurityGame(DomainSpecificSG):
         if random_target_values and raw_values and not general_sum:
             min_score = min(raw_values)
             max_score = max(raw_values)
+
+            # Step 1: Assign randomized scores
+            randomized_scores = {}
             for node in G.nodes:
                 if G.nodes[node]["score"] > 0:
-                    G.nodes[node]["score"] = float(np.random.uniform(min_score, max_score))
+                    rand_val = float(np.random.uniform(min_score, max_score))
+                    randomized_scores[node] = rand_val
+
+            # Step 2: Normalize to [0, 1] by dividing by max value
+            max_rand = max(randomized_scores.values())
+            if max_rand > 0:
+                for node, val in randomized_scores.items():
+                    G.nodes[node]["score"] = val / max_rand
+            else:
+                for node in randomized_scores:
+                    G.nodes[node]["score"] = 0.0
             # Remove escape proximity if present — we don't want real-world logic to influence
             # for node in G.nodes:
             #     G.nodes[node].pop("escape_proximity", None)

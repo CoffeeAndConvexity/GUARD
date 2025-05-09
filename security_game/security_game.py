@@ -289,9 +289,9 @@ class SecurityGame(Game):
             attacker_uncovered
         ])
 
-        # max_abs_val = np.abs(matrix).max()
-        # if max_abs_val != 0:
-        #     matrix = matrix / max_abs_val  # normalize by largest absolute value, keep signs
+        max_abs_val = np.abs(matrix).max()
+        if max_abs_val != 0:
+            matrix = matrix / max_abs_val  # normalize by largest absolute value, keep signs
 
         return matrix
 

@@ -113,9 +113,23 @@ class InfraSecurityGame(DomainSpecificSG):
             scores = [v[2] for v in targets_di.values()]
             min_score = min(scores)
             max_score = max(scores)
+
+            # Assign randomized scores
+            randomized_scores = {}
             for node in self.graph.nodes:
                 if self.graph.nodes[node]["target"]:
-                    self.graph.nodes[node]["score"] = float(np.random.uniform(min_score, max_score))
+                    rand_val = float(np.random.uniform(min_score, max_score))
+                    randomized_scores[node] = rand_val
+
+            # Normalize scores so the max is 1.0
+            max_rand = max(randomized_scores.values())
+            if max_rand > 0:
+                for node, rand_val in randomized_scores.items():
+                    self.graph.nodes[node]["score"] = rand_val / max_rand
+            else:
+                for node in randomized_scores:
+                    self.graph.nodes[node]["score"] = 0.0
+
             return  # Exit early to skip escape logic when using random scores
 
         # Only apply escape proximity if not random
