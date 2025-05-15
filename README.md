@@ -1,4 +1,4 @@
-# Security Games
+# GUARD - Games Under Adversarial Realistic Domains
 
 ## Example 1: Green Security Game
 
