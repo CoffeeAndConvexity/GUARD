@@ -2,7 +2,7 @@
   "type": "FeatureCollection",
   "generator": "overpass-turbo",
   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL.",
-  "timestamp": "2025-04-20T04:15:41Z",
+  "timestamp": "2025-05-14T06:27:56Z",
   "features": [
     {
       "type": "Feature",
@@ -2089,60 +2089,6 @@
     {
       "type": "Feature",
       "properties": {
-        "@id": "way/534259819",
-        "check_date": "2023-05-09",
-        "name": "Madison Substation",
-        "note": "Reference Page 4",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "substation",
-        "source": "https://www.pjm.com/-/media/committees-groups/committees/srrtep-ma/postings/2022/pseg-local-plan-submission-for-2022-rtep.ashx",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              -74.0362379,
-              40.7513085
-            ],
-            [
-              -74.0355406,
-              40.7511871
-            ],
-            [
-              -74.0352225,
-              40.752245
-            ],
-            [
-              -74.0358171,
-              40.7523538
-            ],
-            [
-              -74.035842,
-              40.7522664
-            ],
-            [
-              -74.0359703,
-              40.7522859
-            ],
-            [
-              -74.0361175,
-              40.7517481
-            ],
-            [
-              -74.0362379,
-              40.7513085
-            ]
-          ]
-        ]
-      },
-      "id": "way/534259819"
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "@id": "way/552640530",
         "generator:method": "photovoltaic",
         "generator:output:electricity": "yes",
@@ -3907,52 +3853,6 @@
     {
       "type": "Feature",
       "properties": {
-        "@id": "way/1171068473",
-        "cables": "3",
-        "check_date": "2023-05-09",
-        "circuits": "1",
-        "description": "This line goes from the Madison Substation down Madison Street a block or so before transitioning underground.",
-        "note": "Reference page 4 source.\nSupplementary project to the Great New Jersey PSEG I-95 Corridor Rebuild. Rebuilding and remarking the lines and towers from the Bergen Generating Station/Bergen Substation down to Trenton.",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "line",
-        "source": "https://www.pjm.com/-/media/committees-groups/committees/srrtep-ma/postings/2022/pseg-local-plan-submission-for-2022-rtep.ashx",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0353191,
-            40.7522033
-          ],
-          [
-            -74.0351816,
-            40.7521954
-          ],
-          [
-            -74.0350377,
-            40.7521844
-          ],
-          [
-            -74.0349399,
-            40.7525364
-          ],
-          [
-            -74.0348196,
-            40.7529769
-          ],
-          [
-            -74.0347457,
-            40.7531845
-          ]
-        ]
-      },
-      "id": "way/1171068473"
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "@id": "way/1171068474",
         "cables": "3",
         "check_date": "2023-05-09",
@@ -4051,248 +3951,6 @@
         ]
       },
       "id": "way/1171068474"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "way/1220642774",
-        "layer": "-1",
-        "location": "underground",
-        "name": "Newport - Hoboken",
-        "operator": "PSE&G",
-        "power": "cable",
-        "source": "https://nj.pseg.com/-/media/pseg/global/gathercontentdocuments/8-4-4-regulatoryfilings/ferc_forms/2022psegfercform1.ashx",
-        "voltage": "230000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0477827,
-            40.7333467
-          ],
-          [
-            -74.03049,
-            40.756686
-          ]
-        ]
-      },
-      "id": "way/1220642774"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "way/1221207875",
-        "circuits": "2",
-        "layer": "-1",
-        "location": "underground",
-        "name": "Hudson - Farragut",
-        "note": "Pg. 42",
-        "operator": "PSE&G",
-        "power": "cable",
-        "source": "https://www.pjm.com/-/media/committees-groups/committees/teac/20150709/20150709-reliability-analysis-update.ashx",
-        "voltage": "345000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0699959,
-            40.748427
-          ],
-          [
-            -73.9861832,
-            40.7053573
-          ]
-        ]
-      },
-      "id": "way/1221207875"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "way/1265395743",
-        "layer": "-1",
-        "location": "underground",
-        "note": "Approximate routing per pavement repair seen in July 2019 GSV",
-        "power": "cable",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0462044,
-            40.7291841
-          ],
-          [
-            -74.0463793,
-            40.7292251
-          ],
-          [
-            -74.0465176,
-            40.7292503
-          ],
-          [
-            -74.0465554,
-            40.7293094
-          ],
-          [
-            -74.0465415,
-            40.7294201
-          ],
-          [
-            -74.0463215,
-            40.7308444
-          ],
-          [
-            -74.0462187,
-            40.7309319
-          ],
-          [
-            -74.0460905,
-            40.731755
-          ],
-          [
-            -74.0461411,
-            40.7318289
-          ],
-          [
-            -74.0459895,
-            40.7329404
-          ],
-          [
-            -74.0459173,
-            40.7334148
-          ],
-          [
-            -74.0458325,
-            40.733501
-          ],
-          [
-            -74.0457189,
-            40.733531
-          ],
-          [
-            -74.0456046,
-            40.7335506
-          ],
-          [
-            -74.0445387,
-            40.7334522
-          ],
-          [
-            -74.0424627,
-            40.7332678
-          ],
-          [
-            -74.0409194,
-            40.7331191
-          ],
-          [
-            -74.0405803,
-            40.7352872
-          ],
-          [
-            -74.0404558,
-            40.7362532
-          ],
-          [
-            -74.0404884,
-            40.7364965
-          ],
-          [
-            -74.0405051,
-            40.7365998
-          ],
-          [
-            -74.0404328,
-            40.7366876
-          ],
-          [
-            -74.0399064,
-            40.7367769
-          ],
-          [
-            -74.039861,
-            40.7368238
-          ],
-          [
-            -74.0398325,
-            40.7369717
-          ]
-        ]
-      },
-      "id": "way/1265395743"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "way/1265395753",
-        "layer": "-1",
-        "location": "underground",
-        "note": "Approximate routing per pavement repair seen in Aug. 2018 GSV",
-        "power": "cable",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0412295,
-            40.7388281
-          ],
-          [
-            -74.0411946,
-            40.7392597
-          ],
-          [
-            -74.0412886,
-            40.739306
-          ],
-          [
-            -74.0419512,
-            40.7394223
-          ],
-          [
-            -74.0428136,
-            40.7395738
-          ],
-          [
-            -74.0429683,
-            40.7395637
-          ],
-          [
-            -74.0431918,
-            40.7398014
-          ],
-          [
-            -74.0434818,
-            40.7401135
-          ],
-          [
-            -74.0435669,
-            40.7403084
-          ],
-          [
-            -74.0435863,
-            40.7404761
-          ],
-          [
-            -74.0435433,
-            40.7406687
-          ],
-          [
-            -74.0434613,
-            40.7408714
-          ],
-          [
-            -74.0433527,
-            40.7410065
-          ]
-        ]
-      },
-      "id": "way/1265395753"
     },
     {
       "type": "Feature",
@@ -4557,191 +4215,6 @@
     {
       "type": "Feature",
       "properties": {
-        "@id": "way/1265404594",
-        "cables": "3",
-        "line": "busbar",
-        "power": "line",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0353191,
-            40.7522033
-          ],
-          [
-            -74.0353411,
-            40.7522071
-          ],
-          [
-            -74.0353453,
-            40.7521935
-          ],
-          [
-            -74.0355233,
-            40.7522246
-          ],
-          [
-            -74.0355705,
-            40.7520692
-          ],
-          [
-            -74.0355615,
-            40.7520676
-          ]
-        ]
-      },
-      "id": "way/1265404594"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "way/1265404595",
-        "cables": "3",
-        "line": "busbar",
-        "power": "line",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0356429,
-            40.7519047
-          ],
-          [
-            -74.0356213,
-            40.7519008
-          ],
-          [
-            -74.0355873,
-            40.7520101
-          ],
-          [
-            -74.0355795,
-            40.7520087
-          ]
-        ]
-      },
-      "id": "way/1265404595"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "way/1265404596",
-        "cables": "3",
-        "line": "busbar",
-        "power": "line",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0355704,
-            40.7520384
-          ],
-          [
-            -74.0355925,
-            40.7520423
-          ],
-          [
-            -74.0355421,
-            40.7522078
-          ],
-          [
-            -74.0356036,
-            40.7522185
-          ]
-        ]
-      },
-      "id": "way/1265404596"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "way/1265404597",
-        "layer": "-1",
-        "location": "underground",
-        "power": "cable",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0354613,
-            40.7513283
-          ],
-          [
-            -74.0356036,
-            40.7522185
-          ]
-        ]
-      },
-      "id": "way/1265404597"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "way/1265404598",
-        "layer": "-1",
-        "location": "underground",
-        "note": "Approximate routing per pavement repair seen in GSV in 2020",
-        "power": "cable",
-        "voltage": "69000"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [
-            -74.0347457,
-            40.7531845
-          ],
-          [
-            -74.0346717,
-            40.7534526
-          ],
-          [
-            -74.0346246,
-            40.7535007
-          ],
-          [
-            -74.0338785,
-            40.7533657
-          ],
-          [
-            -74.0338067,
-            40.7533882
-          ],
-          [
-            -74.0336028,
-            40.7540993
-          ],
-          [
-            -74.0333534,
-            40.7548437
-          ],
-          [
-            -74.0332178,
-            40.7553465
-          ],
-          [
-            -74.0331107,
-            40.7556866
-          ],
-          [
-            -74.0332579,
-            40.7558242
-          ]
-        ]
-      },
-      "id": "way/1265404598"
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "@id": "node/295802851",
         "addr:city": "Hoboken",
         "addr:housenumber": "309",
@@ -4855,26 +4328,6 @@
         ]
       },
       "id": "node/367685151"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/367685163",
-        "addr:state": "NJ",
-        "amenity": "fire_station",
-        "ele": "3",
-        "gnis:feature_id": "2059164;2059165",
-        "name": "Hoboken Ladder Company Number 1;Hoboken Engine Company Number 3",
-        "source": "USGS Geonames"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0259534,
-          40.7527622
-        ]
-      },
-      "id": "node/367685163"
     },
     {
       "type": "Feature",
@@ -5009,23 +4462,6 @@
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/6793958740",
-        "amenity": "clinic",
-        "healthcare": "clinic",
-        "name": "Prompt MD Family Practice"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0270168,
-          40.7508373
-        ]
-      },
-      "id": "node/6793958740"
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "@id": "node/6802708746",
         "amenity": "clinic",
         "healthcare": "clinic",
@@ -5150,6 +4586,21 @@
     {
       "type": "Feature",
       "properties": {
+        "@id": "node/8089836220",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0430945,
+          40.7359713
+        ]
+      },
+      "id": "node/8089836220"
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "@id": "node/8089836221",
         "power": "pole"
       },
@@ -5161,103 +4612,6 @@
         ]
       },
       "id": "node/8089836221"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882764736",
-        "check_date": "2023-05-09",
-        "design": "h-frame",
-        "line_attachment": "anchor",
-        "material": "metal",
-        "operator": "PSE&G",
-        "power": "portal",
-        "structure": "solid"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0356429,
-          40.7519047
-        ]
-      },
-      "id": "node/10882764736"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882764737",
-        "check_date": "2023-05-09",
-        "design": "h-frame",
-        "line_attachment": "anchor",
-        "material": "metal",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0359443,
-          40.7519628
-        ]
-      },
-      "id": "node/10882764737"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882764738",
-        "check_date": "2023-05-09",
-        "design": "monopolar",
-        "material": "wood",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0360967,
-          40.7519785
-        ]
-      },
-      "id": "node/10882764738"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882764739",
-        "check_date": "2023-05-09",
-        "design": "monopolar",
-        "material": "wood",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.036223,
-          40.7520038
-        ]
-      },
-      "id": "node/10882764739"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882764740",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0363557,
-          40.7516087
-        ]
-      },
-      "id": "node/10882764740"
     },
     {
       "type": "Feature",
@@ -5600,110 +4954,6 @@
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/10882777030",
-        "check_date": "2024-03-22",
-        "design": "h-frame",
-        "material": "metal",
-        "operator": "PSE&G",
-        "power": "portal",
-        "structure": "solid"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0353191,
-          40.7522033
-        ]
-      },
-      "id": "node/10882777030"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882777031",
-        "check_date": "2023-05-09",
-        "design": "monopolar",
-        "material": "wood",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0350377,
-          40.7521844
-        ]
-      },
-      "id": "node/10882777031"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882777032",
-        "check_date": "2023-05-09",
-        "design": "monopolar",
-        "material": "wood",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0348196,
-          40.7529769
-        ]
-      },
-      "id": "node/10882777032"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882777033",
-        "check_date": "2023-05-09;2024-03-22",
-        "design": "monopolar;two-level",
-        "line_management": "transition",
-        "location:transition": "yes",
-        "material": "wood",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0347457,
-          40.7531845
-        ]
-      },
-      "id": "node/10882777033"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/10882777034",
-        "check_date": "2023-05-09;2024-03-22",
-        "design": "two-level",
-        "line_management": "transition",
-        "location:transition": "yes",
-        "material": "wood",
-        "operator": "PSE&G",
-        "operator:wikidata": "Q930919",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0354613,
-          40.7513283
-        ]
-      },
-      "id": "node/10882777034"
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "@id": "node/10882777035",
         "check_date": "2023-05-09",
         "design": "two-level",
@@ -5966,26 +5216,6 @@
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/11367696069",
-        "addr:housenumber": "1300",
-        "addr:postcode": "07030",
-        "addr:street": "Sinatra Drive North",
-        "amenity": "school",
-        "name": "Cresthill Academy Day Care and Preschool",
-        "website": "https://www.cresthillacademy.com/"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0236937,
-          40.7525949
-        ]
-      },
-      "id": "node/11367696069"
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "@id": "node/11423271375",
         "addr:city": "Hoboken",
         "addr:housenumber": "1111",
@@ -6063,6 +5293,21 @@
         ]
       },
       "id": "node/11754525824"
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "@id": "node/11754525838",
+        "power": "pole"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -74.0430461,
+          40.7417266
+        ]
+      },
+      "id": "node/11754525838"
     },
     {
       "type": "Feature",
@@ -6277,21 +5522,6 @@
     {
       "type": "Feature",
       "properties": {
-        "@id": "node/11754602100",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0407467,
-          40.7510314
-        ]
-      },
-      "id": "node/11754602100"
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "@id": "node/11754602101",
         "power": "pole"
       },
@@ -6333,81 +5563,6 @@
         ]
       },
       "id": "node/11754602104"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/11754602105",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0415733,
-          40.7511572
-        ]
-      },
-      "id": "node/11754602105"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/11754602107",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0418897,
-          40.7512728
-        ]
-      },
-      "id": "node/11754602107"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/11754602159",
-        "power": "portal"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0356036,
-          40.7522185
-        ]
-      },
-      "id": "node/11754602159"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/11754602165",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0351816,
-          40.7521954
-        ]
-      },
-      "id": "node/11754602165"
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "@id": "node/11754602166",
-        "power": "pole"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -74.0349399,
-          40.7525364
-        ]
-      },
-      "id": "node/11754602166"
     }
   ]
 }

@@ -71,38 +71,6 @@ class GreenSecurityGame(DomainSpecificSG):
                     grid_dict[(row, col)] = 0
         return grid_dict
 
-    # def convert_to_graph(self, grid_dict, lat_center_grid, general_sum):
-    #     G = nx.Graph()
-
-    #     if general_sum:
-    #         for (row, col), raw_value in grid_dict.items():
-    #             inverted_row = self.num_rows - 1 - row
-    #             lat, lon = lat_center_grid[row][col]
-    #             G.add_node((inverted_row, col), score=raw_value, position=(row, col), x=lon, y=lat)
-    #     else:
-    #         max_value = max(grid_dict.values())
-    #         min_value = min(grid_dict.values())
-    #         range_value = max_value - min_value
-
-    #         normalized_values = {
-    #             key: (value - min_value) / range_value if range_value > 0 else 1.0
-    #             for key, value in grid_dict.items()
-    #         }
-
-    #         for (row, col), norm_value in normalized_values.items():
-    #             inverted_row = self.num_rows - 1 - row
-    #             lat, lon = lat_center_grid[row][col]
-    #             G.add_node((inverted_row, col), score=norm_value, position=(row, col), x=lon, y=lat)
-
-    #     for inverted_row in range(self.num_rows):
-    #         for col in range(self.num_columns):
-    #             neighbors = [(inverted_row, col + 1), (inverted_row + 1, col)]
-    #             for neighbor in neighbors:
-    #                 if neighbor in G.nodes:
-    #                     G.add_edge((inverted_row, col), neighbor)
-
-    #     return nx.convert_node_labels_to_integers(G, label_attribute="position")
-
     def convert_to_graph(self, grid_dict, lat_center_grid, general_sum, random_target_values=False):
         G = nx.Graph()
         raw_values = []
@@ -153,9 +121,6 @@ class GreenSecurityGame(DomainSpecificSG):
             else:
                 for node in randomized_scores:
                     G.nodes[node]["score"] = 0.0
-            # Remove escape proximity if present — we don't want real-world logic to influence
-            # for node in G.nodes:
-            #     G.nodes[node].pop("escape_proximity", None)
 
         # Add edges
         for inverted_row in range(self.num_rows):
@@ -266,10 +231,9 @@ class GreenSecurityGame(DomainSpecificSG):
         self.force_return = force_return
 
         grid, cell_side_length_km, lat_center_grid = self.create_grid()
-        # print(cell_side_length_km)
-        # print(defender_step_cost)
+
         defender_step_cost = defender_step_cost * (cell_side_length_km[0] + cell_side_length_km[1]) / 2
-        # print(defender_step_cost)
+
         scores = self.get_scores()
         scores = self.fill_missing_cells(scores)
         self.graph = self.convert_to_graph(scores, lat_center_grid, general_sum, random_target_values)
@@ -301,12 +265,6 @@ class GreenSecurityGame(DomainSpecificSG):
                     defender_val = -data["score"] * defender_animal_value
 
                     targets.append(Target(node=i, attacker_value=attacker_val, defender_value=defender_val))
-        # if general_sum:
-        #     targets = [
-        #         Target(node=i, attacker_value=data["score"]*attacker_animal_value*(1+alpha*data["escape_proximity"]), defender_value=-data["score"]*defender_animal_value)
-        #         for i, data in self.graph.nodes(data=True)
-        #         if data["score"] > 0
-        #     ]
         else:
             targets = [
                 Target(node=i, attacker_value=data["score"], defender_value=-data["score"])
@@ -317,10 +275,6 @@ class GreenSecurityGame(DomainSpecificSG):
 
         self.targets = targets
 
-        # home_base_labels = [(self.get_node_label(node),) for node in home_base_assignments]
-        
-        # Home bases in GSGs are 1 per defender
-        # self.home_bases = [tup[0] for tup in home_base_labels]
         self.home_bases = get_nearest_node_tuples(self.graph, home_base_assignments)
         home_base_labels = self.home_bases
 

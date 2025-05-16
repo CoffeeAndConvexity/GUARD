@@ -193,103 +193,10 @@ class InfraSecurityGame(DomainSpecificSG):
         self.defense_time_threshold = defense_time_threshold
         self.force_return = force_return
         self.create_security_game_graph(general_sum, random_target_values)
-        # self.graph.add_edge(3, 36)
-        # self.graph.add_edge(6, 25) # Specifically for experiment
-        # self.graph.add_edge(25, 6)
-        # self.graph.add_edge(18, 17)
-        # self.graph.add_edge(26, 14)
-        # self.graph.add_edge(16, 17)
-        # self.graph.add_edge(28, 17)
-        # self.graph.add_edge(25, 24)
-        # self.graph.add_edge(24, 25)
-        # self.graph.add_edge(24, 18)
-        # self.graph.add_edge(5, 26)
-        # self.graph.add_edge(17, 16)
-        # self.graph.add_edge(17, 28)
-        # self.graph.add_edge(32, 18)
-        # self.graph.add_edge(22, 3)
-        # self.graph.add_edge(9, 10)
-        # self.graph.add_edge(14, 34)
-        # self.graph.add_edge(36, 3)
-        # self.graph.add_edge(33, 41)
-        # self.graph.add_edge(41, 33)
 
-        
-        
-        
-        #experimental
-        # self.graph.remove_nodes_from([225,25,26,27,138,28,29])
-        
-
-        # self.graph.remove_nodes_from([6,5,4,3,2,1,52,17,25,24,38,37,15,45,43,28,53])
-        # self.graph.remove_nodes_from([12,13,14,15,30,37,38,2,45,28,43,47,27,53,50,9,26,33,25,41,6,51,49,8,4,5,1,29,39])
-        # self.graph.remove_nodes_from([21,7,31, 15, 12, 29, 19, 30, 1, 0, 20, 23])
-        # self.graph.nodes[105]["target"] = False
-        # self.graph.nodes[146]["target"] = False
-        # self.graph.nodes[113]["target"] = False
-        # self.graph.nodes[73]["target"] = False
-        # self.graph.nodes[124]["target"] = False
-        # self.graph.nodes[86]["target"] = False
-        
-        # self.graph.nodes[232]["target"] = False
-        
-        # self.graph.nodes[65]["target"] = False
-        # self.graph.nodes[56]["score"] = 8.500
-        # self.graph.nodes[12]["score"] = 8.500
-
-        #sparsity experiments final version testing
-        # self.graph.add_edge(52, 56)
-        # self.graph.add_edge(56, 52)
-        # self.graph.add_edge(53, 57)
-        # self.graph.add_edge(57, 53)
-        # self.graph.add_edge(91, 21)
-        # self.graph.add_edge(21, 91)
-        # self.graph.add_edge(232, 220)
-        # self.graph.add_edge(220, 232)
-        # self.graph.add_edge(12, 135)
-        # self.graph.add_edge(135, 12)
-        # self.graph.add_edge(167, 170)
-        # self.graph.add_edge(170, 167)
-        # self.graph.add_edge(229, 10)
-        # self.graph.add_edge(10, 229)
-        # self.graph.remove_nodes_from([125,126,214,231])
-        # #upper left
-        # self.graph.remove_nodes_from([89,90,0,1,2,203,47,118,235,117,111,3,97,96,95,94,93,92])
-        # #bottom left
-        # self.graph.remove_nodes_from([162,165,233,20,19,18,17,113,184,163,146,149,148,197,39,32,199,198,234,178,210,5,6,122,200,201,202,168,169,213])
-        
-        # #upper middle/right
-        # self.graph.remove_nodes_from([78,107,48,119,77,147,151,60,61,43,42,41,40,120,102,
-        #     190,34,191,192,16,62,63,64,132,15,108,85,31,164,212,145,144,183,177,216,76,
-        #     194,75,159,150,33,181,179,114,195,217,180,175,219,218,193,133,153,30,110,109,14,74,176,240,72]) 
-        # #bottom right
-        # self.graph.remove_nodes_from([206,226,154,73,143,172,105,98,59,104,88,171,87,86,58,112,123,124,173,204,205,215,103])
-
-        # #experimental (removes whole home base option)
-        # self.graph.remove_nodes_from([232,236,182,167,51])
-        # self.graph.remove_nodes_from([242,222,55,121,220,50,170,211,237,7])
-
-        # self.graph.nodes[100]["target"] = False
-        # self.graph.nodes[12]["target"] = False
-        # self.graph.nodes[56]["target"] = False
-
-        #DO Testing, remove nodes that are not reachable for dt=1 at timesteps 7 with force return
+        # DO Testing, remove nodes that are not reachable for dt=1 at timesteps 7 with force return
         for n in [51, 57, 73, 86, 105, 113, 124, 135, 146, 167, 236]:
             self.graph.nodes[n]["target"] = False
-
-        # if general_sum:
-        #     targets = [
-        #         Target(node=i, attacker_value=data["score"]*attacker_feature_value, defender_value=-data["score"]*defender_feature_value)
-        #         for i, data in self.graph.nodes(data=True)
-        #         if data["target"] == True
-        #     ]
-        # else:
-        #     targets = [
-        #         Target(node=i, attacker_value=data["score"], defender_value=-data["score"])
-        #         for i, data in self.graph.nodes(data=True)
-        #         if data["target"] == True
-        #     ]
-
 
         if general_sum:
             # normalize escape proximities among targets
@@ -319,6 +226,7 @@ class InfraSecurityGame(DomainSpecificSG):
                 for i, data in self.graph.nodes(data=True)
                 if data["target"]
             ]
+            print([t.attacker_value for t in targets])
         
         self.targets = targets
         # self.home_bases = get_nearest_nodes_from_coords(self.graph, home_base_assignments)

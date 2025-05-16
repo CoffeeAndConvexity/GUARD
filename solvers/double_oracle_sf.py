@@ -16,18 +16,98 @@ def dbr(all_defender_actions, current_attacker_actions, D_a, udc, uduc):
         evs.append(ev)
     return all_defender_actions[np.argmax(np.array(evs))], max(evs)
 
+# Linear Program Version of SF DBR
+# def defender_best_response_schedule_form(resources, schedules_by_resource, expected_target_values):
+#     """
+#     Defender best response in schedule-form double oracle using attacker-strategy-dependent expected target values.
+
+#     Parameters:
+#         resources: list of resource IDs (e.g., [0, 1, 2])
+#         schedules_by_resource: dict {r: list of (set, cost)} where each set is a schedule of target nodes
+#         expected_target_values: dict {t: float}, representing the attack-weighted expected utility of defending t
+
+#     Returns:
+#         selected_schedules: list of sets, one per resource (empty set if no schedule available)
+#         covered_targets: list of targets covered
+#         defender_utility: float, total expected defender utility
+#     """
+#     model = gp.Model("DefenderBR_ScheduleForm")
+#     model.setParam("OutputFlag", 0)
+
+#     # Collect all unique targets from all schedules
+#     all_targets = set()
+#     for scheds in schedules_by_resource.values():
+#         for s, _ in scheds:
+#             all_targets.update(s)
+
+#     # Identify usable resources (non-empty schedule lists)
+#     usable_resources = [r for r in resources if len(schedules_by_resource[r]) > 0]
+#     skipped_resources = [r for r in resources if r not in usable_resources]
+
+#     # Decision variables
+#     x = {}
+#     for r in usable_resources:
+#         for i in range(len(schedules_by_resource[r])):
+#             x[r, i] = model.addVar(vtype=GRB.BINARY, name=f"x_{r}_{i}")
+
+#     g = {}
+#     for t in all_targets:
+#         g[t] = model.addVar(vtype=GRB.BINARY, name=f"g_{t}")
+
+#     # Constraint 1: Each usable resource picks exactly one schedule
+#     for r in usable_resources:
+#         model.addConstr(gp.quicksum(x[r, i] for i in range(len(schedules_by_resource[r]))) == 1)
+
+#     # Constraint 2: Coverage logic
+#     for t in all_targets:
+#         model.addConstr(
+#             g[t] <= gp.quicksum(
+#                 x[r, i]
+#                 for r in usable_resources
+#                 for i, (sched, _) in enumerate(schedules_by_resource[r])
+#                 if t in sched
+#             )
+#         )
+
+#     # Objective: minimize expected utility from uncovered targets (zero-sum game setting)
+#     model.setObjective(
+#         gp.quicksum(expected_target_values[t] * g[t] for t in all_targets),
+#         GRB.MINIMIZE
+#     )
+
+#     model.optimize()
+
+#     if model.Status != GRB.OPTIMAL:
+#         print("Warning: Model did not solve to optimality.")
+#         return None, None, None
+
+#     # Retrieve selected schedules
+#     selected_schedules = {}
+#     for r in usable_resources:
+#         for i in range(len(schedules_by_resource[r])):
+#             if x[r, i].X > 0.5:
+#                 selected_schedules[r] = schedules_by_resource[r][i][0]
+#                 break
+
+#     # Add empty sets for skipped resources
+#     for r in skipped_resources:
+#         selected_schedules[r] = set()
+
+#     # Return results in original resource order
+#     selected_schedule_list = [selected_schedules[r] for r in resources]
+#     covered_targets = [t for t in all_targets if g[t].X > 0.5]
+#     utility = model.ObjVal
+
+#     return selected_schedule_list, covered_targets, utility
+
 
 def abr(all_attacker_actions, current_defender_actions, D_d, uac, uauc):
     evs = []
     for t in all_attacker_actions:
         ev = 0
-        # print(current_defender_actions)
         for i,da in enumerate(current_defender_actions):
             coverage = list(itertools.chain.from_iterable(da))
             if t in coverage:
-                # print(coverage)
-                # print(t)s
-                # print(i)
                 ev += uac[t]*D_d[i] #add weighted attacker covered value
             else:
                 ev += uauc[t]*D_d[i] #add weighted attacker uncovered value

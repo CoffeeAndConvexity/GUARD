@@ -31,77 +31,6 @@ class Game:
         self.moving_defender_units = [Defender(f"Moving Defender {i+1}", start_node, capture_radius=moving_defender_capture_radius) for i, start_node in enumerate(moving_defender_start_nodes[:num_moving_defenders])]
         self.stationary_defender_units = [Defender(f"Stationary Defender {i+1}", start_node, capture_radius=stationary_defender_capture_radius) for i, start_node in enumerate(stationary_defender_start_nodes[:num_stationary_defenders])]
 
-    # def generate_moving_player_actions(self, graph, num_moving_units, start_nodes, num_timesteps, allow_wait, end_nodes=[]):
-    #     """
-    #     Generates all possible movement actions for moving players on the graph with specific start and end node constraints.
-
-    #     Parameters:
-    #     - graph: NetworkX graph representing the game environment.
-    #     - num_moving_units: Number of moving players.
-    #     - start_nodes: List of tuples where each element contains allowed start nodes for a unit.
-    #     - num_timesteps: Number of timesteps in the game.
-    #     - allow_wait: Whether waiting at a node is allowed.
-    #     - end_nodes: List of tuples where each element contains allowed end nodes for a unit.
-
-    #     Returns:
-    #     - List of all valid movement actions, formatted correctly.
-    #     """
-            
-    #     if num_moving_units == 0:
-    #         return []
-
-    #     # Validation check: Ensure start_nodes and end_nodes match num_moving_units or are empty
-    #     if (start_nodes and len(start_nodes) != num_moving_units) or (end_nodes and len(end_nodes) != num_moving_units):
-    #         raise ValueError(f"start_nodes and end_nodes must be either empty or have exactly {num_moving_units} elements.")
-        
-    #     # Default to all nodes if empty lists are passed
-    #     if not start_nodes:
-    #         start_nodes = [list(graph.nodes)] * num_moving_units  # Each unit can start at any node
-    #     if not end_nodes:
-    #         end_nodes = [list(graph.nodes)] * num_moving_units  # Each unit can end at any node
-
-    #     def generate_paths(valid_start_nodes, valid_end_nodes):
-    #         # print(valid_start_nodes)
-    #         """Generates all valid paths for a single unit respecting start and end constraints."""
-    #         all_paths = []
-            
-    #         def dfs(current_path):
-    #             if len(current_path) == num_timesteps:
-    #                 if not valid_end_nodes or current_path[-1] in valid_end_nodes:
-    #                     all_paths.append(list(current_path))
-    #                 return
-                
-    #             current_node = current_path[-1]
-    #             neighbors = list(graph.neighbors(current_node))
-                
-    #             if allow_wait or not neighbors:
-    #                 dfs(current_path + [current_node])
-                
-    #             for neighbor in neighbors:
-    #                 dfs(current_path + [neighbor])
-            
-    #         for start_node in valid_start_nodes:
-    #             dfs([start_node])
-            
-    #         return all_paths
-        
-    #     # Generate paths per unit based on their specific constraints
-    #     unit_paths = []
-    #     for i in range(num_moving_units):
-    #         # print(start_nodes,end_nodes)
-    #         unit_paths.append(generate_paths(start_nodes[i], end_nodes[i] if end_nodes else []))
-        
-    #     # Generate all valid assignments of paths to units
-    #     valid_combinations = list(itertools.product(*unit_paths))
-        
-    #     # Convert to correct format: timestep-major
-    #     formatted_paths = []
-    #     for path_tuple in valid_combinations:
-    #         timestep_paths = list(zip(*path_tuple))
-    #         formatted_paths.append(timestep_paths)
-        
-    #     return formatted_paths
-
     def generate_moving_player_actions(
         self,
         graph,
@@ -316,50 +245,6 @@ class Game:
         # Step 3: Return the total score
         return moving_attacker_score + stationary_attacker_score
 
-    # def generate_utility_matrix(self, general_sum, defender_step_cost):
-    #     """
-    #     Generate the utility matrix by simulating all combinations of actions
-    #     for both attackers and defenders, accounting for stationary and moving units.
-    #     """
-    #     if not general_sum:
-    #         # Generate actions for defenders and attackers
-    #         defender_matrix = self.generate_actions("defender")
-    #         attacker_matrix = self.generate_actions("attacker")
-
-            
-    #         # Initialize the utility matrix
-    #         utility_matrix = np.zeros((len(defender_matrix), len(attacker_matrix)))
-            
-    #         # Loop through all combinations of actions
-    #         for i, defender_action in enumerate(defender_matrix):
-    #             for j, attacker_action in enumerate(attacker_matrix):
-    #                 # Simulate the game with the current actions and store the outcome
-    #                 utility_matrix[i, j] = self.evaluate_actions(defender_action, attacker_action)
-            
-    #         return utility_matrix, None, None
-    #     else:
-    #         # Generate actions for defenders and attackers
-    #         defender_matrix = self.generate_actions("defender")
-    #         attacker_matrix = self.generate_actions("attacker")
-
-    #         num_defender_actions = len(defender_matrix)
-    #         num_attacker_actions = len(attacker_matrix)
-
-    #         # Initialize the utility matrices
-    #         defender_utility_matrix = np.zeros((num_defender_actions, num_attacker_actions))
-    #         attacker_utility_matrix = np.zeros((num_defender_actions, num_attacker_actions))
-
-    #         # Loop through all combinations of actions
-    #         for i, defender_action in enumerate(defender_matrix):
-    #             for j, attacker_action in enumerate(attacker_matrix):
-    #                 # Play the general-sum game with both actions
-    #                 attacker_score, defender_score = self.evaluate_actions_general(defender_action, attacker_action, defender_step_cost)
-
-    #                 # Store the respective scores
-    #                 defender_utility_matrix[i, j] = defender_score
-    #                 attacker_utility_matrix[i, j] = attacker_score
-
-    #         return None, attacker_utility_matrix, defender_utility_matrix
 
     def generate_utility_matrix(self, general_sum, defender_step_cost):
         """
@@ -406,16 +291,6 @@ class Game:
                     # Store the respective scores
                     defender_utility_matrix[i, j] = defender_score
                     attacker_utility_matrix[i, j] = attacker_score
-
-            # Normalize both matrices together
-            # max_abs_value = max(
-            #     np.abs(defender_utility_matrix).max(),
-            #     np.abs(attacker_utility_matrix).max()
-            # )
-
-            # if max_abs_value > 0:
-            #     defender_utility_matrix = defender_utility_matrix / max_abs_value
-            #     attacker_utility_matrix = attacker_utility_matrix / max_abs_value
 
             return None, attacker_utility_matrix, defender_utility_matrix
 

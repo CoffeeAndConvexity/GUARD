@@ -163,3 +163,5 @@ cython_debug/
 
 tl_2020*.*
 notebooks/cache
+notebooks/extras
+deprecated

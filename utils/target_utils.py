@@ -1,40 +1,5 @@
 from sklearn.cluster import KMeans
 
-# def get_density_scores(df, coordinate_rectangle, num_columns, num_rows):
-#     """
-#     Assign scores to grid cells based on the direct animal location data.
-    
-#     df: DataFrame with columns ['animal_id', 'lat', 'long', 'timestamp'].
-#     coordinate_rectangle: Tuple (min_lat, max_lat, min_lon, max_lon).
-#     num_columns: Number of columns in the grid.
-#     num_rows: Number of rows in the grid.
-    
-#     returns: A dictionary mapping grid cell indices (row, col) to animal count scores.
-#     """
-    
-#     min_lat, max_lat, min_lon, max_lon = coordinate_rectangle
-#     cell_height = (max_lat - min_lat) / num_rows
-#     cell_width = (max_lon - min_lon) / num_columns
-
-#     # Filter points within the bounding box
-#     cell_df = df.copy(deep=True)[
-#         (df['lat'] >= min_lat) & (df['lat'] <= max_lat) &
-#         (df['long'] >= min_lon) & (df['long'] <= max_lon)
-#     ]
-    
-#     # Calculate grid cell indices for each point
-#     cell_df['row'] = np.floor((cell_df['lat'] - min_lat) / cell_height).astype(int)
-#     cell_df['col'] = np.floor((cell_df['long'] - min_lon) / cell_width).astype(int)
-
-#     # Count occurrences in each grid cell
-#     density_scores = (
-#         cell_df.groupby(['row', 'col'])
-#         .size()
-#         .to_dict()
-#     )
-
-#     return density_scores
-
 def get_density_scores(df, coordinate_rectangle, num_columns, num_rows):
     """
     Assign scores to grid cells based on estimated number of animals (not raw observation count).

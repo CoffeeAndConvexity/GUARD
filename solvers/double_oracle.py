@@ -123,7 +123,6 @@ def best_response_a(P_t, T, k):
     nodes = [t.node for t in T]
     scores = [t.attacker_value*(1-P_t[t.node]) for t in T]
     return tuple([x for _, x in sorted(zip(scores, nodes),reverse=True)][:min(len(T),k)])
-    # return tuple(sorted([t.node for t in T], key=lambda node: next(t.value for t in T if t.node == node) * (1 - P_t[node]), reverse=True)[:k])
 
 def get_interdictions(Tdi, defender_action, tau):
     visited = [n for path in defender_action for n in path]
@@ -132,8 +131,6 @@ def get_interdictions(Tdi, defender_action, tau):
 
 def get_score(attacker_action, defender_action, Tdi, tau):
     interdictions = get_interdictions(Tdi, defender_action, tau)
-    # print("=========scores calculated out============")
-    # print(list([Tdi[t] if t not in interdictions and t is not None else 0 for t in attacker_action]))
     return -sum(list([Tdi[t] if t not in interdictions and t is not None else 0 for t in attacker_action]))
 
 def get_attack_probabilities(D_a, attacker_actions, Tdi):
@@ -190,19 +187,16 @@ def expand_subgame(U, A_a, A_d, BR_a_in_U, BR_d_in_U, Tdi, tau):
     # Compute new **column** (if A_a expanded)
     if not BR_a_in_U:
         for i in range(new_n):  # Iterate over all rows (old + new)
-            # print("*************")
-            # print(get_score(A_a[-1], A_d[i], Tdi, tau))
+
             test = get_score(A_a[-1], A_d[i], Tdi, tau)
-            # print(test)
+
             new_U[i, new_m-1] = get_score(A_a[-1], A_d[i], Tdi, tau)
-            # new_U[i, new_m-1] = test
-            # print(new_U[i, new_m-1])
+
     
     # Compute new **row** (if A_d expanded)
     if not BR_d_in_U:
         for i in range(new_m):  # Iterate over all columns (old + new)
             new_U[new_n-1, i] = get_score(A_a[i], A_d[-1], Tdi, tau)
-    # print(new_U)
     return new_U
 
 def double_oracle(game, eps=1e-6, verbose=True):
@@ -214,24 +208,15 @@ def double_oracle(game, eps=1e-6, verbose=True):
     #Initialize Subgame
     A_a = [best_response_a({t.node:0 for t in game.targets}, game.targets, game.num_attackers)]
     P_a = get_attack_probabilities([1], A_a, Tdi) # D_a initial, initial actions, targets
+
     BR_d0 = best_response_d(game.graph, game.num_defenders, game.num_timesteps-1, [t.node for t in game.targets], 
-    game.defense_time_threshold, home_base_mapping, P_a, {t.node:t.attacker_value for t in game.targets}, game.force_return)
+                            game.defense_time_threshold, home_base_mapping, P_a, {t.node:t.attacker_value for t in game.targets}, game.force_return)
+
     A_d = np.array(BR_d0).T[np.newaxis, :, :]
-    # print("initial A_a, A_d")
-    # print(A_a)
-    # print(A_d)
-    #a_selections = [tuple(game.attacker_actions[i][0]) for i in range(len(game.attacker_actions))]
-    # A_a = a_selections[:initial_subgame_size]
-    # A_d = game.defender_actions[:initial_subgame_size]
-    # print(A_a,A_d)
-    # subgame_rows = []
-    # for i in range(initial_subgame_size):
-    #     subgame_rows.append([get_score(A_a[j], A_d[i], Tdi, game.defense_time_threshold) for j in range(initial_subgame_size)])
+
     subgame_rows = [[get_score(A_a[0], A_d[0], Tdi, game.defense_time_threshold)]]
     U_subgame = np.vstack(subgame_rows).astype(float)
-    # print("initial subgame")
-    # print(U_subgame)
-    # print(U_subgame)
+
     gap = np.inf
     c = 0
     iteration_times = []
@@ -244,35 +229,28 @@ def double_oracle(game, eps=1e-6, verbose=True):
         
         #Solve subgame
         D_a, D_d, u_s = nash(U_subgame)
-        # print("D_a, D_d, u nash")
-        # print(D_a, D_d, u_s)
-        
+
         #Get useful distributions for best responses
         P_a = get_attack_probabilities(D_a, A_a, Tdi)
         P_d = get_interdiction_probabilities(D_d, game.targets, A_d, game.defense_time_threshold)
-        # print("P_a, P_d")
-        # print(P_a,P_d)
+
         #Get best responses
         BR_a = best_response_a(P_d, game.targets, game.num_attackers)
         BR_d = best_response_d(game.graph, game.num_defenders, game.num_timesteps-1, [t.node for t in game.targets], game.defense_time_threshold, home_base_mapping, P_a, {t.node:t.attacker_value for t in game.targets}, game.force_return)
-        # print("BRa, BRd")
-        # print(BR_a,BR_d)
+
         #Get best response utilities and equilibrium gap
         u_BRa_Dd = -sum([(1-P_d[t])*Tdi[t] for t in list(set(BR_a)) if t is not None])
         u_BRd_Da = -sum([Tdi[t]*P_a[t] if t not in get_interdictions(Tdi, BR_d, game.defense_time_threshold) else 0 for t in P_a])
-        # print("u_BRa_Dd,u_BRd_Da")
-        # print(u_BRa_Dd)
-        # print(u_BRd_Da)
+
         gap = abs(u_BRa_Dd - u_BRd_Da)
         gaps.append(gap)
-        # print(f"gap:{gap}")
+
         #Expand subgame action sets and subgame U matrix
         if BR_a not in A_a:
-            # print("here 1!!!!")
+
             A_a.append(BR_a)
         else:
             BR_a_in_U = True
-        # print(f"BR A IN U{BR_a_in_U}")
 
         BR_d_arr = np.array(BR_d).T  # shape (T, D)
         BR_d_in_U = any(np.array_equal(BR_d_arr, a) for a in A_d)
@@ -282,12 +260,9 @@ def double_oracle(game, eps=1e-6, verbose=True):
             A_d = np.concatenate((A_d, append_BR_d), axis=0)
         else:
             BR_d_in_U = True
-        # print(f"BR D IN U{BR_d_in_U}")
-        # print("U subgame before expansion")
-        # print(U_subgame)
+
         U_subgame = expand_subgame(U_subgame, A_a, A_d, BR_a_in_U, BR_d_in_U, Tdi, game.defense_time_threshold)
-        # print("U subgame after expansion")
-        # print(U_subgame)
+
         end = time.time()
         iteration_times.append(end-start)
         c+=1
