@@ -379,7 +379,7 @@ def run_isg_general_sse_lp():
         "general_sum": True,
         "attacker_feature_value":  1, 
         "defender_feature_value": 100, 
-        "defender_step_cost": 2, 
+        "defender_step_cost": 1, 
         "alpha":.5
     }
 

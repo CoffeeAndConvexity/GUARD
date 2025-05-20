@@ -597,7 +597,7 @@ def run_rm_isg_general_sse_lp():
         "general_sum": True,
         "attacker_feature_value":  1, 
         "defender_feature_value": 100, 
-        "defender_step_cost": 2,
+        "defender_step_cost": 1,
         "alpha":.5
     }
 
@@ -615,7 +615,7 @@ def run_rm_isg_general_sse_lp():
                 generate_utility_matrix=True, 
                 generate_actions=False, 
                 force_return=True, 
-                defense_time_threshold=2, 
+                defense_time_threshold=1, 
                 **schedule_form_kwargs,
                 **general_sum_kwargs, 
                 )
@@ -662,7 +662,7 @@ def run_rt_isg_general_sse_lp():
         "general_sum": True,
         "attacker_feature_value":  1, 
         "defender_feature_value": 100, 
-        "defender_step_cost": 2,
+        "defender_step_cost": 1,
         "alpha":.5
     }
 
@@ -733,7 +733,7 @@ def run_rts_isg_general_sse_lp():
         "general_sum": True,
         "attacker_feature_value":  1, 
         "defender_feature_value": 100, 
-        "defender_step_cost": 2,
+        "defender_step_cost": 1,
         "alpha":.5
     }
 

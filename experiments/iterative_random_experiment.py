@@ -35,6 +35,14 @@ lat_max, lon_max = 2.2837, 16.2038
 
 coordinate_rectangle = [lat_min, lat_max, lon_min, lon_max]
 
+boulou_camp = (2.2,15.9)
+# lobeke_camp = (2.25,15.75)
+kabo_djembe = (2.0532352380408088, 16.085709866529694)
+bomassa = (2.2037280296158355, 16.187056364164913)
+inner_post = (2.2,15.98)
+sangha_river = [(2.2837, 16.16283352464626),(2.053, 16.066212728001727)]
+
+
 # Preprocess ISG Data
 gdf = gpd.read_file("chinatown_infra.geojson")
 
@@ -130,6 +138,24 @@ INFRA_WEIGHTS = {
     # Communications
     "communications_tower": 1.25,
 }
+
+# Bounding box for Hoboken, NJ
+# bbox_hoboken_small = (40.752635, 40.745600, -74.030386,-74.043903)
+bbox_hoboken_low = (40.745411, 40.735486, -74.025857,-74.041479)
+bbox_hoboken_east = (40.748337, 40.734641,-74.022961,-74.031286)
+bbox_downtown = (40.718721, 40.714078, -73.996074, -74.002651)
+bbox_downtown_large = (40.7215, 40.710, -73.9935, -74.010)
+college_police = (40.743293077312465, -74.02670221027175)
+police_station = (40.73768931976651, -74.02990519431108)
+traffic_police = (40.7366602084371, -74.03449866349136)
+downtown_station = (40.71232433042349, -74.00187755238431)
+fifth_ave_station = (40.71637413934789, -73.9973285259067)
+fifth_precinct = (40.71625547686622, -73.99736909131171)
+booking_station = (40.716191530904815, -74.00102237385177)
+police_plaza = (40.71236124409745, -74.00173715463521)
+troop_nyc = (40.71657885026091, -74.00641139014367)
+first_precinct = (40.720411300417446, -74.0070247584372)
+brooklyn_bridge = (40.712438951145266, -74.004937098962)
 
 
 def run_random_gsg_nfg_do():

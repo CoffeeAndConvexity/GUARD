@@ -194,9 +194,9 @@ class InfraSecurityGame(DomainSpecificSG):
         self.force_return = force_return
         self.create_security_game_graph(general_sum, random_target_values)
 
-        # DO Testing, remove nodes that are not reachable for dt=1 at timesteps 7 with force return
-        for n in [51, 57, 73, 86, 105, 113, 124, 135, 146, 167, 236]:
-            self.graph.nodes[n]["target"] = False
+        # # DO Testing, remove nodes that are not reachable for dt=1 at timesteps 7 with force return
+        # for n in [51, 57, 73, 86, 105, 113, 124, 135, 146, 167, 236]:
+        #     self.graph.nodes[n]["target"] = False
 
         if general_sum:
             # normalize escape proximities among targets

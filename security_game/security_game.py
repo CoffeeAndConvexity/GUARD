@@ -222,8 +222,6 @@ class SecurityGame(Game):
             attacker_covered,
             attacker_uncovered
         ])
-
-        print(matrix)
     
 
         max_abs_val = np.abs(matrix).max()
