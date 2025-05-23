@@ -77,3 +77,57 @@ class DomainSpecificSG(ABC):
 
         with open(filename, "wb") as f:
             pickle.dump(data, f)
+
+    def to_nfg(self, filename, general_sum=False):
+    if not filename.endswith(".nfg"):
+        raise ValueError("Filename must end with .nfg")
+
+    game_title = "ExportedGame"
+    players = ["Defender", "Attacker"]
+
+    if general_sum:
+        matrix1 = self.attacker_utility_matrix
+        matrix2 = self.defender_utility_matrix
+    else:
+        matrix = self.utility_matrix
+        matrix1 = matrix
+        matrix2 = -matrix  # Zero-sum: defender gets negative of attacker
+
+    num_def_actions = matrix1.shape[0]
+    num_att_actions = matrix1.shape[1]
+
+    # Strategy labels: just use stringified indices
+    def_strategies = [f"D{i}" for i in range(num_def_actions)]
+    att_strategies = [f"A{j}" for j in range(num_att_actions)]
+
+    # Outcome definitions (avoids duplicates)
+    outcome_map = {}
+    outcomes = []
+    outcome_counter = 1
+
+    outcome_indices = []
+    for i in range(num_def_actions):
+        for j in range(num_att_actions):
+            payoff = (matrix1[i, j], matrix2[i, j])
+            if payoff not in outcome_map:
+                outcome_map[payoff] = outcome_counter
+                outcomes.append((payoff, outcome_counter))
+                outcome_counter += 1
+            outcome_indices.append(outcome_map[payoff])
+
+    with open(filename, "w") as f:
+        # Prologue
+        f.write(f'NFG 1 R "{game_title}" {{ "{players[0]}" "{players[1]}" }}\n\n')
+        f.write("{\n")
+        f.write(f'{{ {" ".join(f"\\"{s}\\"" for s in def_strategies)} }}\n')
+        f.write(f'{{ {" ".join(f"\\"{s}\\"" for s in att_strategies)} }}\n')
+        f.write("}\n\n")
+
+        # Outcome definitions
+        f.write("{\n")
+        for (payoff, idx) in outcomes:
+            f.write(f'{{ "" {payoff[0]}, {payoff[1]} }}\n')
+        f.write("}\n")
+
+        # Outcome indices (body)
+        f.write(" ".join(str(idx) for idx in outcome_indices) + "\n")

@@ -15,15 +15,15 @@ from utils.misc_utils import get_nearest_nodes_from_coords, get_nearest_node_tup
 
 
 class InfraSecurityGame(DomainSpecificSG):
-    def __init__(self, power_df, block_gdf, infra_weights, bbox, escape_point=None, mode="block", population_scaler=1):
-        self.power_df = power_df  # Power feature locations
+    def __init__(self, infra_df, block_gdf, infra_weights, bbox, escape_point=None, mode="block", population_scaler=1):
+        self.infra_df = infra_df  # Infra feature locations
         self.block_gdf = block_gdf  # Census block population data
-        self.infra_weights = infra_weights  # Dictionary of power type multipliers
+        self.infra_weights = infra_weights  # Dictionary of infra type multipliers
         self.bbox = bbox
         self.mode = mode
         self.population_scaler = population_scaler
         self.escape_point = escape_point
-        self.power_pop_df = None # Population-assigned power df
+        self.infra_pop_df = None # Population-assigned infra df
         self.graph = None  # Security game graph
         self.num_timesteps = None
         self.num_attackers = None
@@ -33,32 +33,32 @@ class InfraSecurityGame(DomainSpecificSG):
         self.utility_matrix = None
     
     def assign_population(self, mode, radius=None):
-        power_gdf = gpd.GeoDataFrame(
-            self.power_df,
-            geometry=gpd.points_from_xy(self.power_df.x, self.power_df.y),
+        infra_gdf = gpd.GeoDataFrame(
+            self.infra_df,
+            geometry=gpd.points_from_xy(self.infra_df.x, self.infra_df.y),
             crs=self.block_gdf.crs
         )
         
         if mode == "block":
-            joined = gpd.sjoin(power_gdf, self.block_gdf[['POP20', 'geometry']], how="left", predicate="within")
-            self.power_df['population'] = joined['POP20']
+            joined = gpd.sjoin(infra_gdf, self.block_gdf[['POP20', 'geometry']], how="left", predicate="within")
+            self.infra_df['population'] = joined['POP20']
         
         elif mode == "radius":
             if radius is None:
                 raise ValueError("Radius must be specified for 'radius' mode.")
             
-            power_gdf = power_gdf.to_crs(epsg=3857)  # Convert to meters-based CRS
+            infra_gdf = infra_gdf.to_crs(epsg=3857)  # Convert to meters-based CRS
             block_gdf = self.block_gdf.to_crs(epsg=3857)
             
-            power_gdf['buffer'] = power_gdf.geometry.buffer(radius)
-            self.power_df['population'] = power_gdf['buffer'].apply(
+            infra_gdf['buffer'] = infra_gdf.geometry.buffer(radius)
+            self.infra_df['population'] = infra_gdf['buffer'].apply(
                 lambda buf: block_gdf[block_gdf.geometry.intersects(buf)]['POP20'].sum()
                 if not block_gdf[block_gdf.geometry.intersects(buf)].empty else float('nan')
             )
         else:
             raise ValueError("Invalid mode. Choose 'block' or 'radius'.")
         
-        self.power_pop_df = self.power_df[['id', 'x', 'y', 'type', 'population']]
+        self.infra_pop_df = self.infra_df[['id', 'x', 'y', 'type', 'population']]
 
     def create_security_game_graph(self, general_sum, random_target_values=False):
         north, south, east, west = self.bbox
@@ -78,16 +78,16 @@ class InfraSecurityGame(DomainSpecificSG):
         )
 
         self.assign_population(mode="block", radius=None)
-        self.power_pop_df = self.power_pop_df[
-            (self.power_df["x"] >= min_x) & (self.power_df["x"] <= max_x) &
-            (self.power_df["y"] >= min_y) & (self.power_df["y"] <= max_y)
+        self.infra_pop_df = self.infra_pop_df[
+            (self.infra_df["x"] >= min_x) & (self.infra_df["x"] <= max_x) &
+            (self.infra_df["y"] >= min_y) & (self.infra_df["y"] <= max_y)
         ]
 
-        self.power_pop_df["geometry"] = self.power_pop_df.apply(lambda row: Point(row["x"], row["y"]), axis=1)
-        power_pop_gdf = gpd.GeoDataFrame(self.power_pop_df, geometry="geometry", crs="EPSG:4326")
+        self.infra_pop_df["geometry"] = self.infra_pop_df.apply(lambda row: Point(row["x"], row["y"]), axis=1)
+        infra_pop_gdf = gpd.GeoDataFrame(self.infra_pop_df, geometry="geometry", crs="EPSG:4326")
 
         targets_di = {}
-        for _, row in power_pop_gdf.iterrows():
+        for _, row in infra_pop_gdf.iterrows():
             closest_node = ox.distance.nearest_nodes(self.graph, row["x"], row["y"])
             base_weight = self.infra_weights.get(row["type"], 1.0)
             score = base_weight * (1 + np.log(row["population"] + 1)) ** self.population_scaler
@@ -183,7 +183,7 @@ class InfraSecurityGame(DomainSpecificSG):
         ]
         ax.legend(handles=legend_elements, loc="lower right")
         
-        plt.title("Power Grid Infra Security Game")
+        plt.title("Infra Security Game")
         plt.show()
     
     def generate(self, num_attackers, num_defenders, home_base_assignments, num_timesteps, interdiction_protocol=None, defense_time_threshold=2, generate_utility_matrix=False, generate_actions=True, force_return=False, schedule_form=False, general_sum=False, random_target_values=False, randomize_target_utility_matrix=False, attacker_feature_value=1, defender_feature_value=1, defender_step_cost=0, simple=True, attacker_penalty_factor=3, defender_penalty_factor=3, alpha=1):
@@ -193,10 +193,6 @@ class InfraSecurityGame(DomainSpecificSG):
         self.defense_time_threshold = defense_time_threshold
         self.force_return = force_return
         self.create_security_game_graph(general_sum, random_target_values)
-
-        # # DO Testing, remove nodes that are not reachable for dt=1 at timesteps 7 with force return
-        # for n in [51, 57, 73, 86, 105, 113, 124, 135, 146, 167, 236]:
-        #     self.graph.nodes[n]["target"] = False
 
         if general_sum:
             # normalize escape proximities among targets
@@ -229,9 +225,7 @@ class InfraSecurityGame(DomainSpecificSG):
             print([t.attacker_value for t in targets])
         
         self.targets = targets
-        # self.home_bases = get_nearest_nodes_from_coords(self.graph, home_base_assignments)
         self.home_bases = get_nearest_node_tuples(self.graph, home_base_assignments)
-        # home_base_labels = [(node,) for node in self.home_bases]
         home_base_labels = self.home_bases
     
         game = SecurityGame(
